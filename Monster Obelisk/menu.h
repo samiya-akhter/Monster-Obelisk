@@ -28,4 +28,10 @@ void creditClick(int mx, int my) {
 	}
 }
 
+void settingClick(int mx, int my){
+	if (mx >= 918 && mx <= 960 && my >= 518 && my <= 560) {
+		gameState = 3;
+	}
+}
+
 #endif

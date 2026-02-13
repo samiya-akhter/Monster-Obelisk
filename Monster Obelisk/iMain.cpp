@@ -50,6 +50,11 @@ void iDraw()
 	{
 		drawCreditPage();
 	}
+
+	else if (gameState == 3)
+	{
+		drawSettingsPage();
+	}
 }
 
 void iMouseMove(int mx, int my)
@@ -78,6 +83,10 @@ void iMouse(int button, int state, int mx, int my)
 
 		if (gameState == 2)
 			backClick(mx, my);
+
+		if (gameState == 0)
+			settingClick(mx, my);
+
 	}
 
 
@@ -85,6 +94,13 @@ void iMouse(int button, int state, int mx, int my)
 	{
 
 	}
+
+
+	
+}
+
+void iSpecialKeyboard(unsigned char key){
+	
 }
 
 // Special Keys:
