@@ -47,9 +47,15 @@ void iDraw()
 	{
 		drawPlayPage();
 	}
+
 	else if (gameState == 2)
 	{
 		drawCreditPage();
+	}
+
+	else if (gameState == 3)
+	{
+		drawSettingsPage();
 	}
 
 	else if (gameState == 4)
@@ -85,6 +91,8 @@ void iMouse(int button, int state, int mx, int my)
 		if (gameState == 2)
 			backClick(mx, my);
 
+		if (gameState == 0)
+			settingClick(mx, my);
 
 		if (gameState == 0)
 			howToPlayClick(mx, my);
@@ -100,6 +108,13 @@ void iMouse(int button, int state, int mx, int my)
 	{
 
 	}
+
+
+	
+}
+
+void iSpecialKeyboard(unsigned char key){
+	
 }
 
 // Special Keys:
