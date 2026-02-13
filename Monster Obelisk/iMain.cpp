@@ -151,7 +151,7 @@ void fixedUpdate()
 		//mciSendString("play ggsong from 0", NULL, 0, NULL);
 	}
 }
-
+ 
 
 int main()
 {
@@ -165,7 +165,7 @@ int main()
 	// If the use of an audio is finished, close it to free memory
 	// mciSendString("close bgsong", NULL, 0, NULL);
 	// mciSendString("close ggsong", NULL, 0, NULL);
-
+	iSetTimer(800, updatePlayPage);
 	iInitialize(1000, 600, "Monstrum Obelisk");
 	iStart();
 	return 0;
