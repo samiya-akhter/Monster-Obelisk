@@ -1,27 +1,45 @@
 #include "iGraphics.h"
-#include "creditpage.h"
+#include "menu.h"
 #include "playpage.h"
 /*struct buttonCordinate
 {
 	int x = 0;
 	int y = 0;
 }bCordinate[4];*/
+void playPage();
+void creditPage();
+void settingPage();
+
+void playClick();
+void creditClick();
+
+int playbutton = 0;
+int creditbutton = 0;
 
 int x = 0;
 int y = 0;
 
 char homepage[25] = {"Image//homepage.bmp"};
-char button[2][20] = { "Image//start.bmp", "Image//credit.bmp" };
+char button[2][20] = { "Image//play.bmp", "Image//credit.bmp" };
 char playpage[20] = { "Image//playpage.bmp" };
 int gameState = 0;
+int playState = 0;
+int creditState = 0;
+int settingState = 0;
+int helpState = 0;
 
 void iDraw()
 {
 	iClear();
 	iFilledRectangle(0, 0, 1000, 600);
 	iSetColor(255, 255, 255);
-	if (gameState == 0){
-		iShowBMP(0, 0, homepage);
+	if (gameState == 0)
+	{
+		drawMenu();
+	}
+	else if (gameState == 1)
+	{
+		drawPlayPage();
 	}
 }
 
@@ -41,8 +59,9 @@ void iMouse(int button, int state, int mx, int my)
 
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
-
-
+		
+		if (gameState == 0)
+			playClick(mx, my);
 	}
 
 
@@ -98,5 +117,4 @@ int main()
 	iInitialize(1000, 600, "Project Title");
 	iStart();
 	return 0;
-
 }
