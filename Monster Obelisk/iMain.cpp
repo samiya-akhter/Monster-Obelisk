@@ -62,6 +62,7 @@ void iDraw()
 	else if (gameState == 4)
 	{
 		drawHowToPlayPage();
+	}
 
 }
 
@@ -147,7 +148,7 @@ void fixedUpdate()
 
 	if (isKeyPressed(' ')) {
 		// Playing the audio once
-		mciSendString("play ggsong from 0", NULL, 0, NULL);
+		//mciSendString("play ggsong from 0", NULL, 0, NULL);
 	}
 }
 
