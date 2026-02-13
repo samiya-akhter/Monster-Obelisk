@@ -19,4 +19,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="playpage.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="creditpage.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="setting.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>
