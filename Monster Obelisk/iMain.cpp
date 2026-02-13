@@ -3,6 +3,7 @@
 #include "creditpage.h"
 #include "playpage.h"
 #include "setting.h"
+#include "howtoplaypage.h"
 
 
 /*struct buttonCordinate
@@ -50,6 +51,11 @@ void iDraw()
 	{
 		drawCreditPage();
 	}
+
+	else if (gameState == 4)
+	{
+		drawHowToPlayPage();
+	}
 }
 
 void iMouseMove(int mx, int my)
@@ -78,6 +84,15 @@ void iMouse(int button, int state, int mx, int my)
 
 		if (gameState == 2)
 			backClick(mx, my);
+
+
+		if (gameState == 0)
+			howToPlayClick(mx, my);
+
+		/*if (gameState == 4)
+			back2Click(mx, my);*/
+
+		
 	}
 
 

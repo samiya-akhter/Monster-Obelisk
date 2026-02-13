@@ -32,5 +32,8 @@
     <ClInclude Include="menu.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="howtoplaypage.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

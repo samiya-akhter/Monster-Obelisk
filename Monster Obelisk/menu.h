@@ -28,4 +28,11 @@ void creditClick(int mx, int my) {
 	}
 }
 
+
+void howToPlayClick(int mx, int my) {
+	if (mx >= 38 && mx <= 110 && my >= 36 && my <= 90) {
+		gameState = 4;
+	}
+}
+
 #endif
