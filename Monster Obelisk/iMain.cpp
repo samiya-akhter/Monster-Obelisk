@@ -1,7 +1,4 @@
 #include "iGraphics.h"
-#include"creditpage.h"
-#include"playpage.h"
-
 
 
 /*struct buttonCordinate
