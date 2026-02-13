@@ -1,4 +1,9 @@
 #include "iGraphics.h"
+#include"creditpage.h"
+#include"playpage.h"
+
+
+
 /*struct buttonCordinate
 {
 	int x = 0;
@@ -12,6 +17,11 @@ char homepage[25] = {"Image//homepage.bmp"};
 char button[2][20] = { "Image//start.bmp", "Image//credit.bmp" };
 char playpage[20] = { "Image//playpage.bmp" };
 int gameState = 0;
+int playState = 0;
+int creditState = 0;
+int settingstate = 0;
+int helpState = 0;
+
 
 void iDraw()
 {
@@ -93,7 +103,7 @@ int main()
 	// mciSendString("close bgsong", NULL, 0, NULL);
 	// mciSendString("close ggsong", NULL, 0, NULL);
 
-	iInitialize(1000, 600, "Project Title");
+	iInitialize(1000, 600, "Monstrum Obelisk");
 	iStart();
 	return 0;
 }

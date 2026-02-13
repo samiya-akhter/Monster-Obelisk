@@ -66,6 +66,10 @@
   <ItemGroup>
     <ClCompile Include="iMain.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="creditpage.h" />
+    <ClInclude Include="playpage.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
