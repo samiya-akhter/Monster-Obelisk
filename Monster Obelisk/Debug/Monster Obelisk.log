@@ -1,17 +1,25 @@
-﻿Build started 2/13/2026 6:07:16 PM.
+﻿Build started 2/13/2026 6:50:41 PM.
      1>Project "E:\Monster-Obelisk\Monster Obelisk\Monster Obelisk.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt iMain.cpp
          iMain.cpp
-     1>e:\monster-obelisk\monster obelisk\menu.h(31): error C2059: syntax error : '<<'
-     1>e:\monster-obelisk\monster obelisk\menu.h(32): error C2143: syntax error : missing ';' before '{'
-     1>e:\monster-obelisk\monster obelisk\menu.h(32): error C2447: '{' : missing function header (old-style formal list?)
-     1>e:\monster-obelisk\monster obelisk\menu.h(40): error C2059: syntax error : 'bad suffix on number'
-     1>e:\monster-obelisk\monster obelisk\imain.cpp(63): error C2059: syntax error : 'bad suffix on number'
-     1>e:\monster-obelisk\monster obelisk\imain.cpp(107): error C2059: syntax error : 'bad suffix on number'
-     1>e:\monster-obelisk\monster obelisk\imain.cpp(171): fatal error C1004: unexpected end-of-file found
+     1>e:\monster-obelisk\monster obelisk\menu.h(35): error C2601: 'howToPlayClick' : local function definitions are illegal
+                 e:\monster-obelisk\monster obelisk\menu.h(32): this line contains a '{' which has not yet been matched
+     1>e:\monster-obelisk\monster obelisk\creditpage.h(5): error C2601: 'drawCreditPage' : local function definitions are illegal
+                 e:\monster-obelisk\monster obelisk\menu.h(32): this line contains a '{' which has not yet been matched
+     1>e:\monster-obelisk\monster obelisk\creditpage.h(9): error C2601: 'backClick' : local function definitions are illegal
+                 e:\monster-obelisk\monster obelisk\menu.h(32): this line contains a '{' which has not yet been matched
+     1>e:\monster-obelisk\monster obelisk\playpage.h(5): error C2601: 'drawPlayPage' : local function definitions are illegal
+                 e:\monster-obelisk\monster obelisk\menu.h(32): this line contains a '{' which has not yet been matched
+     1>e:\monster-obelisk\monster obelisk\setting.h(5): error C2601: 'drawSettingsPage' : local function definitions are illegal
+                 e:\monster-obelisk\monster obelisk\menu.h(32): this line contains a '{' which has not yet been matched
+     1>e:\monster-obelisk\monster obelisk\howtoplaypage.h(5): error C2601: 'drawHowToPlayPage' : local function definitions are illegal
+                 e:\monster-obelisk\monster obelisk\menu.h(32): this line contains a '{' which has not yet been matched
+     1>e:\monster-obelisk\monster obelisk\imain.cpp(38): error C2601: 'iDraw' : local function definitions are illegal
+                 e:\monster-obelisk\monster obelisk\menu.h(32): this line contains a '{' which has not yet been matched
+     1>e:\monster-obelisk\monster obelisk\imain.cpp(170): fatal error C1075: end of file found before the left brace '{' at 'e:\monster-obelisk\monster obelisk\imain.cpp(57)' was matched
      1>Done Building Project "E:\Monster-Obelisk\Monster Obelisk\Monster Obelisk.vcxproj" (Build target(s)) -- FAILED.
 
 Build FAILED.
 
-Time Elapsed 00:00:00.47
+Time Elapsed 00:00:00.45

@@ -52,13 +52,15 @@ void iDraw()
 		drawCreditPage();
 	}
 
+
 	else if (gameState == 3)
 	{
 		drawSettingsPage();
+
 	else if (gameState == 4)
 	{
 		drawHowToPlayPage();
-	}
+
 }
 
 void iMouseMove(int mx, int my)
@@ -88,8 +90,10 @@ void iMouse(int button, int state, int mx, int my)
 		if (gameState == 2)
 			backClick(mx, my);
 
+
 		if (gameState == 0)
 			settingClick(mx, my);
+
 
 
 		if (gameState == 0)
@@ -99,6 +103,7 @@ void iMouse(int button, int state, int mx, int my)
 			back2Click(mx, my);*/
 
 		
+
 	}
 
 
