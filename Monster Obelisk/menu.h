@@ -2,14 +2,24 @@
 #define MENU_H
 
 extern int gameState;
+int playHover = 0;
+int creditHover = 0;
 
 void drawMenu()
 {
 	iShowBMP(0, 0, "Image//homepage.bmp");
 	
 	// Play button image
-	iShowBMP2(0, 0, "Image//play.bmp",0);
-	iShowBMP2(0, 0, "Image//credit.bmp", 0);
+
+	if (playHover)
+		iShowBMP2(0, 0, "Image//play.bmp", 0);
+	
+
+	// Draw Credit button hover
+	if (creditHover)
+		iShowBMP2(0, 0, "Image//credit.bmp", 0);
+	
+	
 
 }
 

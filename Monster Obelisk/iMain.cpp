@@ -78,8 +78,24 @@ void iMouseMove(int mx, int my)
 
 void iPassiveMouseMove(int mx, int my)
 {
-	if (gameState == 2)  // Credit Page
-		creditPassiveMouseMove(mx, my);  // sets hover flag
+	if (gameState == 0)  // Menu
+	{
+		// Play button hover
+		if (mx >= 398 && mx <= 572 && my >= 160 && my <= 215)
+			playHover = 1;
+		else
+			playHover = 0;
+
+		// Credit button hover
+		if (mx >= 388 && mx <= 578 && my >= 80 && my <= 130)
+			creditHover = 1;
+		else
+			creditHover = 0;
+	}
+
+	// Credit Page hover
+	if (gameState == 2)
+		creditPassiveMouseMove(mx, my);
 }
 
 void iMouse(int button, int state, int mx, int my)
