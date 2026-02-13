@@ -9,6 +9,7 @@ void drawMenu()
 	
 	// Play button image
 	iShowBMP2(0, 0, "Image//play.bmp",0);
+	iShowBMP2(0, 0, "Image//credit.bmp", 0);
 
 }
 
