@@ -1,11 +1,11 @@
 #include "iGraphics.h"
-<<<<<<< HEAD
+//<<<<<<< HEAD
 #include "menu.h"
-=======
+//=======
 
 
 #include "creditpage.h"
->>>>>>> 0caefc9f8865594d61dffc4d81eb6dc088b5eab9
+//>>>>>>> 0caefc9f8865594d61dffc4d81eb6dc088b5eab9
 #include "playpage.h"
 /*struct buttonCordinate
 {
@@ -31,14 +31,20 @@ char playpage[20] = { "Image//playpage.bmp" };
 int gameState = 0;
 int playState = 0;
 int creditState = 0;
-<<<<<<< HEAD
+//<<<<<<< HEAD
 int settingState = 0;
 int helpState = 0;
-=======
-int settingstate = 0;
-int helpState = 0;
+//=======
+//int settingstate = 0;
+//int helpState = 0;
 
->>>>>>> 0caefc9f8865594d61dffc4d81eb6dc088b5eab9
+//>>>>>>> 0caefc9f8865594d61dffc4d81eb6dc088b5eab9
+
+void creditClick(int mx, int my) {
+	if (mx >= 388 && mx <= 578 && my >= 80 && my <= 130) {
+		gameState = 2;
+	}
+}
 
 void iDraw()
 {
@@ -52,6 +58,10 @@ void iDraw()
 	else if (gameState == 1)
 	{
 		drawPlayPage();
+	}
+	else if (gameState == 2)
+	{
+		drawCreditPage();
 	}
 }
 
@@ -67,13 +77,17 @@ void iPassiveMouseMove(int mx, int my)
 }
 
 void iMouse(int button, int state, int mx, int my)
-{printf("%d %d\n", mx, my);
+{
+	printf("%d %d\n", mx, my);
 
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
 		
 		if (gameState == 0)
 			playClick(mx, my);
+
+		if (gameState == 0)
+			creditClick(mx,my);
 	}
 
 
