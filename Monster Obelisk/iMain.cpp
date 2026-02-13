@@ -1,4 +1,6 @@
 #include "iGraphics.h"
+#include "creditpage.h"
+#include "playpage.h"
 /*struct buttonCordinate
 {
 	int x = 0;
@@ -96,4 +98,5 @@ int main()
 	iInitialize(1000, 600, "Project Title");
 	iStart();
 	return 0;
+
 }
