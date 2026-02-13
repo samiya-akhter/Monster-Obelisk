@@ -47,6 +47,7 @@ void iDraw()
 	{
 		drawPlayPage();
 	}
+
 	else if (gameState == 2)
 	{
 		drawCreditPage();
@@ -56,6 +57,7 @@ void iDraw()
 	else if (gameState == 3)
 	{
 		drawSettingsPage();
+	}
 
 	else if (gameState == 4)
 	{
