@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="creditpage.h" />
+    <ClInclude Include="menu.h" />
     <ClInclude Include="playpage.h" />
     <ClInclude Include="setting.h" />
   </ItemGroup>

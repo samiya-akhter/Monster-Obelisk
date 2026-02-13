@@ -21,4 +21,11 @@ void playClick(int mx, int my)
 	}
 }
 
+void creditClick(int mx, int my) {
+	if (mx >= 388 && mx <= 578 && my >= 80 && my <= 130) {
+		gameState = 2;
+	}
+}
+
+
 #endif

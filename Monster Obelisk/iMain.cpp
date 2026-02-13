@@ -1,12 +1,9 @@
 #include "iGraphics.h"
-//<<<<<<< HEAD
 #include "menu.h"
-//=======
-
-
 #include "creditpage.h"
-//>>>>>>> 0caefc9f8865594d61dffc4d81eb6dc088b5eab9
 #include "playpage.h"
+
+
 /*struct buttonCordinate
 {
 	int x = 0;
@@ -31,20 +28,9 @@ char playpage[20] = { "Image//playpage.bmp" };
 int gameState = 0;
 int playState = 0;
 int creditState = 0;
-//<<<<<<< HEAD
 int settingState = 0;
 int helpState = 0;
-//=======
-//int settingstate = 0;
-//int helpState = 0;
 
-//>>>>>>> 0caefc9f8865594d61dffc4d81eb6dc088b5eab9
-
-void creditClick(int mx, int my) {
-	if (mx >= 388 && mx <= 578 && my >= 80 && my <= 130) {
-		gameState = 2;
-	}
-}
 
 void iDraw()
 {
