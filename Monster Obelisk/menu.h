@@ -9,6 +9,7 @@ void drawMenu()
 	
 	// Play button image
 	iShowBMP2(0, 0, "Image//play.bmp",0);
+
 }
 
 void playClick(int mx, int my)
@@ -26,6 +27,5 @@ void creditClick(int mx, int my) {
 		gameState = 2;
 	}
 }
-
 
 #endif

@@ -2,6 +2,7 @@
 #include "menu.h"
 #include "creditpage.h"
 #include "playpage.h"
+#include "setting.h"
 
 
 /*struct buttonCordinate
@@ -74,6 +75,9 @@ void iMouse(int button, int state, int mx, int my)
 
 		if (gameState == 0)
 			creditClick(mx,my);
+
+		if (gameState == 2)
+			backClick(mx, my);
 	}
 
 

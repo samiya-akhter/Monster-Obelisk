@@ -1,7 +1,7 @@
 #ifndef PLAYPAGE_H
 #define PLAYPAGE_H
 
-void drawCreditPage()
+void drawPlayPage()
 {
 	iShowBMP(0, 0, "image//playpage.bmp");
 }
