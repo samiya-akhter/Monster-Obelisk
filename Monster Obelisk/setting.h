@@ -3,7 +3,7 @@
 
 
 void drawSettingsPage(){
-	iShowBMP(0, 0, "Image//setting.bmp");
+	iShowBMP(0, 0, "Image//settingpage.bmp");
 }
 
 #endif

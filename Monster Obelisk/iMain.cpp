@@ -78,22 +78,26 @@ void iMouseMove(int mx, int my)
 
 void iPassiveMouseMove(int mx, int my)
 {
-	if (gameState == 0)  // Menu
+	if (gameState == 0)  // MENU
 	{
-		// Play button hover
-		if (mx >= 398 && mx <= 572 && my >= 160 && my <= 215)
-			playHover = 1;
-		else
-			playHover = 0;
+		// PLAY hover
+		playHover = (mx >= 398 && mx <= 572 &&
+			my >= 160 && my <= 215);
 
-		// Credit button hover
-		if (mx >= 388 && mx <= 578 && my >= 80 && my <= 130)
-			creditHover = 1;
-		else
-			creditHover = 0;
+		// CREDIT hover
+		creditHover = (mx >= 388 && mx <= 578 &&
+			my >= 80 && my <= 130);
+
+		// SETTINGS hover
+		settingHover = (mx >= 918 && mx <= 960 &&
+			my >= 518 && my <= 560);
+
+		// HOW TO PLAY hover
+		helpHover = (mx >= 38 && mx <= 110 &&
+			my >= 36 && my <= 90);
 	}
 
-	// Credit Page hover
+	// Credit page hover (back button)
 	if (gameState == 2)
 		creditPassiveMouseMove(mx, my);
 }

@@ -4,6 +4,8 @@
 extern int gameState;
 int playHover = 0;
 int creditHover = 0;
+int settingHover = 0;
+int helpHover = 0;
 
 void drawMenu()
 {
@@ -18,7 +20,14 @@ void drawMenu()
 	// Draw Credit button hover
 	if (creditHover)
 		iShowBMP2(0, 0, "Image//credit.bmp", 0);
-	
+
+
+	if (settingHover)
+		iShowBMP2(0, 0, "Image//setting.bmp", 0);
+
+	// HOW TO PLAY BUTTON
+	if (helpHover)
+		iShowBMP2(0, 0, "Image//how_to_play.bmp", 0);
 	
 
 }
