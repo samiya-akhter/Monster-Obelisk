@@ -6,6 +6,7 @@
 #include "howtoplaypage.h"
 #include "wildarea.h"
 #include "battletower1.h"
+#include <ctime>
 
 void drawPlayPage();
 void drawCreditPage();
@@ -246,7 +247,7 @@ int main()
 	// mciSendString("close bgsong", NULL, 0, NULL);
 	// mciSendString("close ggsong", NULL, 0, NULL);
 	iSetTimer(800, updatePlayPage);
-
+	srand(time(NULL));
 	shuffleCards(); // Randomize cards at start
 	iSetTimer(20, checkMemoryMatch);
 

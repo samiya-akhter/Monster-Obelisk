@@ -11,8 +11,9 @@ int lockBoard = 0; // Prevents clicking during animation
 int matchesFound = 0;
 
 void shuffleCards() {
-	for (int i = 0; i < 12; i++) {
-		int j = rand() % 12;
+	for (int i = 11; i > 0; i--) {
+		int j = rand() % (i + 1);
+
 		int temp = cards[i];
 		cards[i] = cards[j];
 		cards[j] = temp;
@@ -28,12 +29,12 @@ void drawWildArea()
 		int yPos = 400 - (i / 4) * 150;
 
 		if (cardState[i] == 0) {
-			iShowBMP2(xPos, yPos, "Image//card_back.bmp",255);
+			iShowBMP2(xPos, yPos, "Image//card_back.bmp",0);
 		}
 		else if(cardState[i] == 1) {
 			char cardImg[30];
 			sprintf_s(cardImg, sizeof(cardImg), "Image//poke%d.bmp", cards[i]);
-			iShowBMP2(xPos, yPos, cardImg,255);
+			iShowBMP2(xPos, yPos, cardImg,0);
 		}
 		else if (cardState[i] == 2){
 			continue;
