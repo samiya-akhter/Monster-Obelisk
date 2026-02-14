@@ -4,6 +4,15 @@
 #include "playpage.h"
 #include "setting.h"
 #include "howtoplaypage.h"
+#include "wildarea.h"
+#include "battletower1.h"
+
+void drawPlayPage();
+void drawCreditPage();
+void drawSettingPage();
+void drawHowToPlayPage();
+void drawWildArea();
+void drawBattleTower1();
 
 
 /*struct buttonCordinate
@@ -33,6 +42,16 @@ int creditState = 0;
 int settingState = 0;
 int helpState = 0;
 
+/*
+gameState = 0 >> main menu
+gameState = 1 >> playpage/map
+gameState = 2 >> creditpage
+gameState = 3 >> settings
+gameState = 4 >> how to play
+gameState = 5 >> wild area
+gameState = 6 >> battle tower 1
+
+*/
 
 void iDraw()
 {
@@ -56,7 +75,7 @@ void iDraw()
 
 	else if (gameState == 3)
 	{
-		drawSettingsPage();
+		drawSettingPage();
 	}
 
 	else if (gameState == 4)
@@ -64,6 +83,14 @@ void iDraw()
 		drawHowToPlayPage();
 	}
 
+	else if (gameState == 5)
+	{
+		drawWildArea();
+	}
+
+	else if (gameState == 6) {
+		drawBattleTower1();
+	}
 }
 
 void iMouseMove(int mx, int my)
@@ -120,6 +147,11 @@ void iMouse(int button, int state, int mx, int my)
 			settingClick(mx, my);
 		if (gameState == 0)
 			howToPlayClick(mx, my);
+
+		//inside map/playpage
+		if (gameState == 1) {
+			mapClick(mx, my); // Handle clicks on the map
+		}
 		
 
 	

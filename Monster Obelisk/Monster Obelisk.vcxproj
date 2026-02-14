@@ -68,10 +68,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="creditpage.h" />
+    <ClInclude Include="battletower1.h" />
     <ClInclude Include="howtoplaypage.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="playpage.h" />
     <ClInclude Include="setting.h" />
+    <ClInclude Include="wildarea.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

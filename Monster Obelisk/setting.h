@@ -1,9 +1,9 @@
-#ifndef SETTINGSPAGE_H
-#define SETTINGSPAGE_H
+#ifndef SETTINGPAGE_H
+#define SETTINGPAGE_H
 
 
-void drawSettingsPage(){
+void drawSettingPage()
+{
 	iShowBMP(0, 0, "Image//settingpage.bmp");
 }
-
 #endif

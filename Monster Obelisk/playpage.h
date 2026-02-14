@@ -26,4 +26,14 @@ void updatePlayPage()
 		playFrame = 0;
 }
 
+void mapClick(int mx, int my) {
+	// Coordinates for wild area
+	if (mx >= 100 && mx <= 420 && my >= 310 && my <= 520) {
+		gameState = 5;
+	}
+	// Coordinates for Battle Tower 1
+	if (mx >= 590 && mx <= 660 && my >= 230 && my <= 640) {
+		gameState = 6;
+	}
+}
 #endif

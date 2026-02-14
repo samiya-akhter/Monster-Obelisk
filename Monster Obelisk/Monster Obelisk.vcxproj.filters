@@ -35,5 +35,11 @@
     <ClInclude Include="howtoplaypage.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="wildarea.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="battletower1.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
