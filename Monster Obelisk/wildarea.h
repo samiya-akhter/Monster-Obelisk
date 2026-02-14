@@ -42,8 +42,8 @@ void drawWildArea()
 	}
 
 	if (matchesFound == 6) {
-		iSetColor(255, 255, 0);
-		iText(420, 500, "YOU WIN!", GLUT_BITMAP_TIMES_ROMAN_24);
+		iSetColor(150, 0, 200);
+		iText(420, 500, "YOU WIN!", GLUT_BITMAP_HELVETICA_18);
 	}
 }
 void wildAreaClick(int mx, int my) {
