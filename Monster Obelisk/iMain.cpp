@@ -53,6 +53,8 @@ gameState = 6 >> battle tower 1
 
 */
 
+
+
 void iDraw()
 {
 	iClear();
@@ -88,8 +90,34 @@ void iDraw()
 		drawWildArea();
 	}
 
-	else if (gameState == 6) {
+	else if (gameState == 6)
+	{
 		drawBattleTower1();
+	}
+}
+
+
+void checkMemoryMatch() {
+	if (lockBoard && firstIdx != -1 && secondIdx != -1) {
+		static int timerCount = 0;
+		timerCount++;
+
+		if (timerCount > 20) { // Provides a delay so you can see the cards
+			if (cards[firstIdx] == cards[secondIdx]) {
+				cardState[firstIdx] = 2; // Match found
+				cardState[secondIdx] = 2;
+				matchesFound++;
+			}
+			else {
+				cardState[firstIdx] = 0; // Flip back
+				cardState[secondIdx] = 0;
+			}
+			// Reset for next turn
+			firstIdx = -1;
+			secondIdx = -1;
+			lockBoard = 0;
+			timerCount = 0;
+		}
 	}
 }
 
@@ -153,6 +181,11 @@ void iMouse(int button, int state, int mx, int my)
 			mapClick(mx, my); // Handle clicks on the map
 		}
 		
+		//inside wildarea1(memorygame)
+		if (gameState == 5)
+		{
+			wildAreaClick(mx, my);
+		}
 
 	
 
@@ -213,6 +246,10 @@ int main()
 	// mciSendString("close bgsong", NULL, 0, NULL);
 	// mciSendString("close ggsong", NULL, 0, NULL);
 	iSetTimer(800, updatePlayPage);
+
+	shuffleCards(); // Randomize cards at start
+	iSetTimer(20, checkMemoryMatch);
+
 	iInitialize(1000, 600, "Monstrum Obelisk");
 	iStart();
 	return 0;
