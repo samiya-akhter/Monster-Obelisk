@@ -1,7 +1,7 @@
 #ifndef MENU_H
 #define MENU_H
 
-extern int gameState;
+extern int gameState,playState;
 int playHover = 0;
 int creditHover = 0;
 int settingHover = 0;
@@ -38,7 +38,8 @@ void playClick(int mx, int my)
 	if (mx >= 398 && mx <= 572 &&
 		my >= 160 && my <= 215)
 	{
-		gameState = 1;   // Go to playpage
+		gameState = 1;
+		playState = 1;// Go to playpage
 	}
 }
 

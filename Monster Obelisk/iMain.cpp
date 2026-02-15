@@ -52,6 +52,7 @@ gameState = 4 >> how to play
 gameState = 5 >> wild area
 gameState = 6 >> battle tower 1
 
+gameState = 7 >> story sequence
 */
 
 
@@ -61,11 +62,17 @@ void iDraw()
 	iClear();
 	iFilledRectangle(0, 0, 1000, 600);
 	iSetColor(255, 255, 255);
+
 	if (gameState == 0)
 	{
 		drawMenu();
 	}
-	else if (gameState == 1)
+/*	else if (playState == 1)
+	{
+		drawStory();
+	}*/
+	else if (gameState == 1 || playState == 1 )
+//	else if (gameState == 1)
 	{
 		drawPlayPage();
 	}
@@ -177,6 +184,13 @@ void iMouse(int button, int state, int mx, int my)
 		if (gameState == 0)
 			howToPlayClick(mx, my);
 
+
+		//shows the story
+/*		if (playState == 1) {
+			storyClick(mx, my, playState,gameState); 
+			return;
+		}*/
+
 		//inside map/playpage
 		if (gameState == 1) {
 			mapClick(mx, my); // Handle clicks on the map
@@ -246,6 +260,7 @@ int main()
 	// If the use of an audio is finished, close it to free memory
 	// mciSendString("close bgsong", NULL, 0, NULL);
 	// mciSendString("close ggsong", NULL, 0, NULL);
+	iSetTimer(3000, updateStory);
 	iSetTimer(800, updatePlayPage);
 	srand(time(NULL));
 	shuffleCards(); // Randomize cards at start

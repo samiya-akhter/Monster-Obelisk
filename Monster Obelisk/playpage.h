@@ -1,5 +1,19 @@
 #ifndef PLAYPAGE_H
 #define PLAYPAGE_H
+extern int playState;
+extern int gameState;
+
+char storySlides[8][30] = {
+	"image//story1.bmp",
+	"image//story2.bmp",
+	"image//story3.bmp",
+	"image//story4.bmp",
+	"image//story5.bmp",
+	"image//story6.bmp",
+	"image//story7.bmp",
+	"image//story8.bmp"
+};
+
 
 char map[8][25] = {
 	"image//map1.bmp",
@@ -12,18 +26,38 @@ char map[8][25] = {
 	"image//map8.bmp"
 };
 
+int storyFrame = 0;
+
 int playFrame = 0;
 
 void drawPlayPage()
 {
-	iShowBMP(0, 0, map[playFrame]);
+	if (playState == 1) iShowBMP(0, 0, storySlides[storyFrame]);
+	else {
+		iShowBMP(0, 0, map[playFrame]);
+	}
+}
+
+void updateStory()
+{
+	if (playState == 1) {
+		storyFrame++;
+		if (storyFrame >= 8) {
+			playState = 2; // End story state
+			gameState = 1; // Transition to Map
+			storyFrame = 0; // Reset for future use
+		}
+	}
 }
 
 void updatePlayPage()
 {
-	playFrame++;
-	if (playFrame >= 8)
-		playFrame = 0;
+	if (playState == 2){
+		playFrame++;
+		if (playFrame >= 8)
+			playFrame = 0;
+
+	}
 }
 
 void mapClick(int mx, int my) {
