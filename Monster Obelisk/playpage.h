@@ -16,14 +16,14 @@ char storySlides[8][30] = {
 
 
 char map[8][25] = {
-	"image//map1.bmp",
-	"image//map2.bmp",
-	"image//map3.bmp",
-	"image//map4.bmp",
-	"image//map5.bmp",
-	"image//map6.bmp",
-	"image//map7.bmp",
-	"image//map8.bmp"
+	"image//playpage1.png",
+	"image//playpage2.png",
+	"image//playpage3.png",
+	"image//playpage4.png",
+	"image//playpage5.png",
+	"image//playpage6.png",
+	"image//playpage7.png",
+	"image//playpage8.png"
 };
 
 int storyFrame = 0;
@@ -32,9 +32,9 @@ int playFrame = 0;
 
 void drawPlayPage()
 {
-	if (playState == 1) iShowBMP(0, 0, storySlides[storyFrame]);
+	if (playState == 1) iShowImage(0, 0, 1000, 600, iLoadImage(storySlides[storyFrame]));
 	else {
-		iShowBMP(0, 0, map[playFrame]);
+		iShowImage(0, 0, 1000, 600, iLoadImage(map[playFrame]));
 	}
 }
 

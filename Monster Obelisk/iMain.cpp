@@ -34,9 +34,9 @@ int creditbutton = 0;
 int x = 0;
 int y = 0;
 
-char homepage[25] = {"Image//homepage.bmp"};
+char homepage[25] = {"Image//homepage.png"};
 char button[2][20] = { "Image//play.bmp", "Image//credit.bmp" };
-char playpage[20] = { "Image//playpage.bmp" };
+//char playpage[20] = { "Image//playpage.bmp" };
 int gameState = 0;
 int playState = 0;
 int creditState = 0;
