@@ -11,7 +11,7 @@ int backWidth = 131, backHeight = 37;
 void drawCreditPage()
 {
 	// Draw background
-	iShowBMP(0, 0, "image//creditpage.bmp");
+	iShowImage(0, 0,1000,600,iLoadImage( "image//creditpage.png"));
 
 	// Draw back button only if hovered or pressed
 	if (backHover || backPressed)
