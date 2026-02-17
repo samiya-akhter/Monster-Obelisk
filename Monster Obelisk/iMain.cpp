@@ -6,7 +6,6 @@
 #include "setting.h"
 #include "howtoplaypage.h"
 #include "wildarea.h"
-#include "wildarea.h"
 #include "battletower1.h"
 #include "RunnerGame.h"
 #include <ctime>

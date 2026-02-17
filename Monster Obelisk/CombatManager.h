@@ -307,8 +307,12 @@ public:
         
         // Draw Player (Animated)
         unsigned int tex = playerMonster.textureID;
+        int drawW = 220; // Slightly smaller base to balance with attack
+        int drawH = 220;
         
         if (currentState == PLAYER_ATTACK) {
+             drawW = 320; // Increased size to compensate for shrinking content during attack
+             drawH = 320;
              if (playerMonster.currentAttackType == 1 && !playerMonster.attack1Frames.empty()) {
                  tex = playerMonster.attack1Frames[playerMonster.currentFrame % playerMonster.attack1Frames.size()];
              }
@@ -327,7 +331,7 @@ public:
              }
         }
 
-        iShowImage((int)playerMonster.x, (int)playerMonster.y, 200, 200, tex);
+        iShowImage((int)playerMonster.x, (int)playerMonster.y, drawW, drawH, tex);
         DrawHealthBar(playerMonster.x + 20, playerMonster.y + 210, playerMonster.currentHealth, playerMonster.maxHealth, 0, 255, 0);  
         // HP Text
         char hpBuffer[32];
