@@ -42,9 +42,18 @@ struct Monster {
     
     // Visual
     float x, y;
-    unsigned int textureID;
+    unsigned int textureID; // Static/Fallback
+    
+    // Animations
+    std::vector<unsigned int> walkFrames;
+    std::vector<unsigned int> attack1Frames; // Lightning Blast
+    std::vector<unsigned int> attack2Frames; // Thunder Crash
+    
+    int currentFrame;
+    float animTimer;
+    int currentAttackType; // 0=None, 1=LB, 2=TC
 
-    Monster() : maxHealth(100), currentHealth(100), attackPower(10), x(0), y(0), textureID(0) {}
+    Monster() : maxHealth(100), currentHealth(100), attackPower(10), x(0), y(0), textureID(0), currentFrame(0), animTimer(0), currentAttackType(0) {}
 };
 
 class CombatManager {
@@ -59,17 +68,35 @@ public:
         currentState = COMBAT_START;
         
         // Init Player
-        playerMonster.name = "Lightning Wolf";
-        playerMonster.textureIdle = "Image//lightning_monster_idle.bmp";
-        playerMonster.textureID = iLoadImage(playerMonster.textureIdle.c_str(), 255, 255, 255); // Remove white BG
+        playerMonster.name = "Vivi";
+        playerMonster.textureIdle = "Image//lightning_monster_idle.bmp"; // Fallback
+        playerMonster.textureID = iLoadImage(playerMonster.textureIdle.c_str(), 255, 255, 255); 
+        
+        // Load Animations for Vivi
+        // Walk: Image/Vivi/vivi_walk (1).png to (25)
+        // LB: Image/Vivi/vivi_lb (1).png to (25)
+        // TC: Image/Vivi/vivi_tc (1).png to (25)
+        LoadAnimationFrames(playerMonster.walkFrames, "Image//Vivi//vivi_walk", 25);
+        LoadAnimationFrames(playerMonster.attack1Frames, "Image//Vivi//vivi_lb", 25);
+        LoadAnimationFrames(playerMonster.attack2Frames, "Image//Vivi//vivi_tc", 25);
+        
         playerMonster.maxHealth = 100.0f;
         playerMonster.currentHealth = playerMonster.maxHealth;
-        playerMonster.attackPower = 40.0f; // Balanced starting power
+        playerMonster.attackPower = 40.0f; 
         playerMonster.x = PLAYER_START_X;
         playerMonster.y = PLAYER_START_Y;
         
         backgroundTextureID = iLoadImage("Image//combact_background.bmp");
         SetupWave(currentWave);
+    }
+    
+    void LoadAnimationFrames(std::vector<unsigned int>& frames, std::string prefix, int count) {
+        frames.clear();
+        char path[256];
+        for (int i = 1; i <= count; i++) {
+            sprintf_s(path, 256, "%s (%d).png", prefix.c_str(), i);
+            frames.push_back(iLoadImage(path, 255, 255, 255)); // Removed white BG just in case
+        }
     }
 
     void SetupWave(int waveIndex) {
@@ -108,13 +135,17 @@ public:
 
     void PlayerAttack(int type) {
         if (currentState == PLAYER_TURN) {
+            playerMonster.currentAttackType = type; // 1 or 2
+            playerMonster.currentFrame = 0; // Reset animation
+            playerMonster.animTimer = 0;
+            
             if (type == 1) { // Space: Lightning Blast
                  currentAttackName = "LIGHTNING BLAST!";
-                 currentAttackDamage = playerMonster.attackPower; // Normal damage
+                 currentAttackDamage = playerMonster.attackPower; 
             } else if (type == 2) { // F: Thunder Crash
-                 if (currentWave < 3) return; // Locked until Wave 3
+                 if (currentWave < 3) return; 
                  currentAttackName = "THUNDER CRASH!";
-                 currentAttackDamage = playerMonster.attackPower * 2.0f; // Double damage!
+                 currentAttackDamage = playerMonster.attackPower * 2.0f; 
             }
             
             currentState = PLAYER_ATTACK;
@@ -127,6 +158,41 @@ public:
         if (waveMessageTimer > 0) waveMessageTimer -= deltaTime;
         if (attackFeedbackTimer > 0) attackFeedbackTimer -= deltaTime;
         stateTimer += deltaTime;
+
+        // --- ANIMATION UPDATE ---
+        playerMonster.animTimer += deltaTime;
+        float frameDuration = 0.04f; // 25fps -> 1 second for 25 frames
+        
+        if (currentState == PLAYER_ATTACK) {
+             // Attack Animation (Play Once)
+             if (playerMonster.animTimer >= frameDuration) {
+                 playerMonster.animTimer = 0;
+                 playerMonster.currentFrame++;
+                 
+                 // Type 1: LB
+                 if (playerMonster.currentAttackType == 1) {
+                     if (playerMonster.currentFrame >= playerMonster.attack1Frames.size()) {
+                         playerMonster.currentFrame = playerMonster.attack1Frames.size() - 1; // Hold last frame?
+                     }
+                 }
+                 // Type 2: TC
+                 else if (playerMonster.currentAttackType == 2) {
+                     if (playerMonster.currentFrame >= playerMonster.attack2Frames.size()) {
+                         playerMonster.currentFrame = playerMonster.attack2Frames.size() - 1;
+                     }
+                 }
+             }
+        } else {
+             // Walk/Idle Animation (Loop)
+             if (playerMonster.animTimer >= frameDuration) {
+                 playerMonster.animTimer = 0;
+                 playerMonster.currentFrame++;
+                 if (playerMonster.currentFrame >= playerMonster.walkFrames.size()) {
+                     playerMonster.currentFrame = 0;
+                 }
+             }
+        }
+        // ------------------------
 
         // WAVE CLEAR LOGIC
         if (currentState == WAVE_CLEAR) {
@@ -223,9 +289,25 @@ public:
         // Draw Background
         iShowImage(0, 0, 1000, 600, backgroundTextureID);
         
-        // Draw Player (Scaled to 200x200, adjusted position)
-        iShowImage((int)playerMonster.x, (int)playerMonster.y, 200, 200, playerMonster.textureID);
-        DrawHealthBar(playerMonster.x + 20, playerMonster.y + 210, playerMonster.currentHealth, playerMonster.maxHealth, 0, 255, 0); 
+        // Draw Player (Animated)
+        unsigned int tex = playerMonster.textureID;
+        
+        if (currentState == PLAYER_ATTACK) {
+             if (playerMonster.currentAttackType == 1 && !playerMonster.attack1Frames.empty()) {
+                 tex = playerMonster.attack1Frames[playerMonster.currentFrame % playerMonster.attack1Frames.size()];
+             }
+             else if (playerMonster.currentAttackType == 2 && !playerMonster.attack2Frames.empty()) {
+                 tex = playerMonster.attack2Frames[playerMonster.currentFrame % playerMonster.attack2Frames.size()];
+             }
+        } else {
+             // Idle/Walk
+             if (!playerMonster.walkFrames.empty()) {
+                 tex = playerMonster.walkFrames[playerMonster.currentFrame % playerMonster.walkFrames.size()];
+             }
+        }
+
+        iShowImage((int)playerMonster.x, (int)playerMonster.y, 200, 200, tex);
+        DrawHealthBar(playerMonster.x + 20, playerMonster.y + 210, playerMonster.currentHealth, playerMonster.maxHealth, 0, 255, 0);  
         // HP Text
         char hpBuffer[32];
         sprintf_s(hpBuffer, 32, "HP: %d/%d", (int)playerMonster.currentHealth, (int)playerMonster.maxHealth);
