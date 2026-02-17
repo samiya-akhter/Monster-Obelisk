@@ -58,6 +58,9 @@ struct Monster {
 
 class CombatManager {
 public:
+    int lives;
+    float bonusStrength;
+
     static CombatManager& GetInstance() {
         static CombatManager instance;
         return instance;
@@ -73,16 +76,10 @@ public:
         playerMonster.textureID = iLoadImage(playerMonster.textureIdle.c_str(), 255, 255, 255); 
         
         // Load Animations for Vivi
-        // Walk: Image/Vivi/vivi_walk (1).png to (25)
-        // LB: Image/Vivi/vivi_lb (1).png to (25)
-        // TC: Image/Vivi/vivi_tc (1).png to (25)
         LoadAnimationFrames(playerMonster.walkFrames, "Image//Vivi//vivi_walk", 25);
         LoadAnimationFrames(playerMonster.attack1Frames, "Image//Vivi//vivi_lb", 25);
         LoadAnimationFrames(playerMonster.attack2Frames, "Image//Vivi//vivi_tc", 25);
         
-        playerMonster.maxHealth = 100.0f;
-        playerMonster.currentHealth = playerMonster.maxHealth;
-        playerMonster.attackPower = 40.0f; 
         playerMonster.x = PLAYER_START_X;
         playerMonster.y = PLAYER_START_Y;
         
@@ -100,6 +97,11 @@ public:
     }
 
     void SetupWave(int waveIndex) {
+        // Apply strength bonus
+        playerMonster.attackPower = 40.0f + bonusStrength + (20.0f * (waveIndex - 1));
+        playerMonster.maxHealth = 100.0f + (50.0f * (waveIndex - 1));
+        playerMonster.currentHealth = playerMonster.maxHealth;
+
         enemyMonster.name = "Evil Minion";
         enemyMonster.textureIdle = "Image//evil_monster_idle.bmp";
         enemyMonster.textureID = iLoadImage(enemyMonster.textureIdle.c_str(), 255, 255, 255); // Remove white BG
@@ -356,10 +358,17 @@ public:
             iSetColor(255, 255, 255);
             iText(350, 450, "Click to Try Again", (void*)0x0005);
         } else {
-            std::string statusMsg = "Wave: " + std::to_string(currentWave) + " / " + std::to_string(TOTAL_WAVES);
+            char statusBuf[64];
+            sprintf_s(statusBuf, 64, "Wave: %d / %d", currentWave, TOTAL_WAVES);
             iSetColor(255, 255, 255);
-            iText(400, 550, statusMsg.c_str(), (void*)0x0008);
+            iText(400, 550, statusBuf, (void*)0x0008);
         }
+
+        // Draw Lives
+        iSetColor(255, 255, 0);
+        char lifeBuf[32];
+        sprintf_s(lifeBuf, 32, "LIVES: %d", lives);
+        iText(50, 550, lifeBuf, (void*)0x0008);
     }
 
     void OnCleanClick(int mx, int my) {
@@ -373,22 +382,38 @@ public:
     }
 
     void RetryWave() {
-        // Full heal reward? Or penalty? Let's giving full heal for retry.
+        lives--;
+        if (lives <= 0) {
+            extern int gameState;
+            gameState = 1; // Kick back to map
+            lives = 3; // Reset for next time
+            return;
+        }
+
         playerMonster.currentHealth = playerMonster.maxHealth; 
-        
         SetupWave(currentWave);
+    }
+
+    void RestoreLives() {
+        lives = 3;
+    }
+
+    void AddStrengthBonus(float bonus) {
+        bonusStrength += bonus;
     }
 
 private:
     CombatManager() : 
+        lives(3),
+        bonusStrength(0),
         TOTAL_WAVES(3),
         PLAYER_START_X(100), 
-        PLAYER_START_Y(50), // Moved down to "road" level
+        PLAYER_START_Y(50), 
         ENEMY_START_X(700),
-        ENEMY_START_Y(50), // Moved down
+        ENEMY_START_Y(50),
         backgroundTextureID(0),
         stateTimer(0),
-
+        waveMessageTimer(0),
         enemyAttackTimer(0),
         attackFeedbackTimer(0),
         playerHit(false)

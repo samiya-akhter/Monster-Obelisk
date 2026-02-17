@@ -95,7 +95,9 @@ void mapClick(int mx, int my) {
 	}
 	// Coordinates for Battle Tower 1
 	if (mx >= 590 && mx <= 660 && my >= 230 && my <= 640) {
-		gameState = 6;
+        if (CombatManager::GetInstance().lives > 0) {
+		    gameState = 6;
+        }
 	}
 }
 #endif

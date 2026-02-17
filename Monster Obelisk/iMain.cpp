@@ -1,4 +1,5 @@
 #include "iGraphics.h"
+#include "CombatManager.h" // Same directory include preferred after iGraphics
 #include "menu.h"
 #include "creditpage.h"
 #include "playpage.h"
@@ -6,7 +7,6 @@
 #include "howtoplaypage.h"
 #include "wildarea.h"
 #include "battletower1.h"
-#include "CombatManager.h" // Added CombatManager
 #include <ctime>
 
 void drawPlayPage();

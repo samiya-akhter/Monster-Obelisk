@@ -41,6 +41,12 @@ void drawWildArea()
 		}
 	}
 
+    // Back Button
+    iSetColor(150, 150, 150);
+    iFilledRectangle(20, 540, 80, 40);
+    iSetColor(255, 255, 255);
+    iText(35, 555, "BACK", (void*)0x0008);
+
 	if (matchesFound == 6) {
 		iSetColor(150, 0, 200);
 		iShowBMP2(0, 0, "Image//fullenergy.bmp",0);
@@ -68,6 +74,21 @@ void wildAreaClick(int mx, int my) {
 			}
 		}
 	}
+
+    // Back Button Click
+    if (mx >= 20 && mx <= 100 && my >= 540 && my <= 580) {
+        if (matchesFound == 6) {
+            CombatManager::GetInstance().AddStrengthBonus(10.0f); // Award bonus
+            CombatManager::GetInstance().RestoreLives();          // Restore lives!
+        }
+        
+        // Reset Game State for next time
+        matchesFound = 0;
+        for(int k=0; k<12; k++) cardState[k] = 0;
+        shuffleCards();
+        
+        gameState = 1; // Back to map
+    }
 }
 
 
