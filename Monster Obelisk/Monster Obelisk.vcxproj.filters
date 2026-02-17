@@ -44,5 +44,8 @@
     <ClInclude Include="CombatManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="RunnerGame.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

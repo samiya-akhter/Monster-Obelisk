@@ -6,7 +6,9 @@
 #include "setting.h"
 #include "howtoplaypage.h"
 #include "wildarea.h"
+#include "wildarea.h"
 #include "battletower1.h"
+#include "RunnerGame.h"
 #include <ctime>
 
 void drawPlayPage();
@@ -113,11 +115,17 @@ void iDraw()
 		drawWildArea();
 	}
 
-	else if (gameState == 6)
+    else if (gameState == 6)
 	{
 		// drawBattleTower1(); // Replaced with Combat System
         CombatManager::GetInstance().RenderCombat();
 	}
+
+    else if (gameState == 8) 
+    {
+        RunnerGame::GetInstance().Update(deltaTime);
+        RunnerGame::GetInstance().Render();
+    }
 }
 
 
@@ -248,8 +256,38 @@ void iSpecialKeyboard(unsigned char key){
 // GLUT_KEY_F1, GLUT_KEY_F2, GLUT_KEY_F3, GLUT_KEY_F4, GLUT_KEY_F5, GLUT_KEY_F6, GLUT_KEY_F7, GLUT_KEY_F8, GLUT_KEY_F9, GLUT_KEY_F10, GLUT_KEY_F11, GLUT_KEY_F12, 
 // GLUT_KEY_LEFT, GLUT_KEY_UP, GLUT_KEY_RIGHT, GLUT_KEY_DOWN, GLUT_KEY_PAGE UP, GLUT_KEY_PAGE DOWN, GLUT_KEY_HOME, GLUT_KEY_END, GLUT_KEY_INSERT
 
+// GLUT_KEY_LEFT, GLUT_KEY_UP, GLUT_KEY_RIGHT, GLUT_KEY_DOWN, GLUT_KEY_PAGE UP, GLUT_KEY_PAGE DOWN, GLUT_KEY_HOME, GLUT_KEY_END, GLUT_KEY_INSERT
+
 void fixedUpdate()
 {
+    // Runner Mode Cheat
+    if (isKeyPressed('r') || isKeyPressed('R')) {
+        gameState = 8;
+        RunnerGame::GetInstance().Reset();
+    }
+
+    if (gameState == 8) {
+        if (isKeyPressed(' ')) {
+             RunnerGame::GetInstance().HandleInput(' ');
+        }
+        
+        static bool cKeysReleased = true;
+        if (isKeyPressed('c') || isKeyPressed('C')) {
+            if (cKeysReleased) {
+                RunnerGame::GetInstance().HandleInput('c');
+                cKeysReleased = false;
+            }
+        } else {
+             cKeysReleased = true;
+        }
+
+        if (isKeyPressed(27)) { // ESC
+            gameState = 5; // Back to Wild Area Selection
+            wildAreaMode = 0; // Ensure selection mode
+        }
+        return; // Stop processing other fixedUpdates
+    }
+
 	// Global movements
 	if (isKeyPressed('w') || isSpecialKeyPressed(GLUT_KEY_UP))
 	{
@@ -338,6 +376,7 @@ int main()
 	
 	// Initialize Combat System AFTER OpenGL context is created
 	CombatManager::GetInstance().InitCombat();
+    RunnerGame::GetInstance().Init();
 
 	iStart();
 	return 0;

@@ -45,6 +45,7 @@ struct Monster {
     unsigned int textureID; // Static/Fallback
     
     // Animations
+    std::vector<unsigned int> idleFrames;
     std::vector<unsigned int> walkFrames;
     std::vector<unsigned int> attack1Frames; // Lightning Blast
     std::vector<unsigned int> attack2Frames; // Thunder Crash
@@ -52,8 +53,9 @@ struct Monster {
     int currentFrame;
     float animTimer;
     int currentAttackType; // 0=None, 1=LB, 2=TC
+    bool isMoving; // Track movement state
 
-    Monster() : maxHealth(100), currentHealth(100), attackPower(10), x(0), y(0), textureID(0), currentFrame(0), animTimer(0), currentAttackType(0) {}
+    Monster() : maxHealth(100), currentHealth(100), attackPower(10), x(0), y(0), textureID(0), currentFrame(0), animTimer(0), currentAttackType(0), isMoving(false) {}
 };
 
 class CombatManager {
@@ -76,6 +78,7 @@ public:
         playerMonster.textureID = iLoadImage(playerMonster.textureIdle.c_str(), 255, 255, 255); 
         
         // Load Animations for Vivi
+        LoadAnimationFrames(playerMonster.idleFrames, "Image//Vivi//vivo_standing", 16);
         LoadAnimationFrames(playerMonster.walkFrames, "Image//Vivi//vivi_walk", 25);
         LoadAnimationFrames(playerMonster.attack1Frames, "Image//Vivi//vivi_lb", 25);
         LoadAnimationFrames(playerMonster.attack2Frames, "Image//Vivi//vivi_tc", 25);
@@ -127,7 +130,10 @@ public:
                         
         if (!canMove) return;
 
+        if (!canMove) return;
+
         playerMonster.x += dx;
+        playerMonster.isMoving = true; // Set moving flag
         // playerMonster.y += dy; // REMOVED: Only X movement allowed
         
         // Simple Bounds Check
@@ -173,25 +179,33 @@ public:
                  
                  // Type 1: LB
                  if (playerMonster.currentAttackType == 1) {
-                     if (playerMonster.currentFrame >= playerMonster.attack1Frames.size()) {
-                         playerMonster.currentFrame = playerMonster.attack1Frames.size() - 1; // Hold last frame?
+                     if (playerMonster.currentFrame >= (int)playerMonster.attack1Frames.size()) {
+                         playerMonster.currentFrame = (int)playerMonster.attack1Frames.size() - 1; // Hold last frame?
                      }
                  }
                  // Type 2: TC
                  else if (playerMonster.currentAttackType == 2) {
-                     if (playerMonster.currentFrame >= playerMonster.attack2Frames.size()) {
-                         playerMonster.currentFrame = playerMonster.attack2Frames.size() - 1;
+                     if (playerMonster.currentFrame >= (int)playerMonster.attack2Frames.size()) {
+                         playerMonster.currentFrame = (int)playerMonster.attack2Frames.size() - 1;
                      }
                  }
              }
         } else {
-             // Walk/Idle Animation (Loop)
+             // Idle/Walk Animation (Loop)
              if (playerMonster.animTimer >= frameDuration) {
                  playerMonster.animTimer = 0;
                  playerMonster.currentFrame++;
-                 if (playerMonster.currentFrame >= playerMonster.walkFrames.size()) {
+                 
+                 int maxFrames = playerMonster.isMoving ? (int)playerMonster.walkFrames.size() : (int)playerMonster.idleFrames.size();
+                 if (playerMonster.currentFrame >= maxFrames) {
                      playerMonster.currentFrame = 0;
                  }
+                 
+                 // Reset moving flag after processing frame (assuming Update called after moves)
+                 // Actually, MovePlayer calls happen in fixedUpdate which might run multiple times or not at all before Render
+                 // A better approach is to decay a timer. Or just reset it here if we assume 1 render per logic step.
+                 // For safety with iGraphics structure:
+                 playerMonster.isMoving = false; 
              }
         }
         // ------------------------
@@ -303,8 +317,13 @@ public:
              }
         } else {
              // Idle/Walk
-             if (!playerMonster.walkFrames.empty()) {
-                 tex = playerMonster.walkFrames[playerMonster.currentFrame % playerMonster.walkFrames.size()];
+             std::vector<unsigned int>* currentAnim = &playerMonster.idleFrames; // Default to idle
+             if (playerMonster.isMoving && !playerMonster.walkFrames.empty()) {
+                  currentAnim = &playerMonster.walkFrames;
+             }
+             
+             if (!currentAnim->empty()) {
+                 tex = (*currentAnim)[playerMonster.currentFrame % currentAnim->size()];
              }
         }
 

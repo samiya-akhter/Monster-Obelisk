@@ -73,6 +73,7 @@
     <ClInclude Include="howtoplaypage.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="playpage.h" />
+    <ClInclude Include="RunnerGame.h" />
     <ClInclude Include="setting.h" />
     <ClInclude Include="wildarea.h" />
   </ItemGroup>
