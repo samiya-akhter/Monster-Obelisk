@@ -110,7 +110,7 @@ void iResumeTimer(int index){
 //
 //                To disable this feature, put -1 in this parameter
 //
-void iShowBMP2(int x, int y, char filename[], int ignoreColor)
+void iShowBMP2(int x, int y, const char* filename, int ignoreColor)
 {
     AUX_RGBImageRec *TextureImage;
     TextureImage = auxDIBImageLoad(filename);
@@ -141,19 +141,26 @@ void iShowBMP2(int x, int y, char filename[], int ignoreColor)
     free(TextureImage);
 }
 
-void iShowBMP(int x, int y, char filename[])
+void iShowBMP(int x, int y, const char* filename)
 {
     iShowBMP2(x, y, filename, -1 /* ignoreColor */);
 }
 
-unsigned int iLoadImage(char filename[])
+unsigned int iLoadImage(const char* filename, int rIgnore, int gIgnore, int bIgnore)
 {
 	int width, height, bpp;
-
 	unsigned int texture;
-
 	BYTE* data(0);
 	data = stbi_load(filename, &width, &height, &bpp, 4);
+
+    if (data && rIgnore >= 0 && gIgnore >= 0 && bIgnore >= 0) {
+        for (int i = 0; i < width * height * 4; i += 4) {
+             if (data[i] == (BYTE)rIgnore && data[i+1] == (BYTE)gIgnore && data[i+2] == (BYTE)bIgnore) {
+                 data[i+3] = 0; // Transparent
+             }
+        }
+    }
+
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexImage2D(GL_TEXTURE_2D,
@@ -165,9 +172,14 @@ unsigned int iLoadImage(char filename[])
 		GL_UNSIGNED_BYTE,
 		data);
 
-	stbi_image_free(data);
+	if(data) stbi_image_free(data);
 
 	return texture;
+}
+
+unsigned int iLoadImage(const char* filename)
+{
+    return iLoadImage(filename, -1, -1, -1);
 }
 
 void iShowImage(int x, int y, int width, int height, unsigned int texture)
@@ -218,7 +230,7 @@ void iGetPixelColor (int cursorX, int cursorY, int rgb[])
     //printf("%d %d %d\n",pixel[0],pixel[1],pixel[2]);
 }
 
-void iText(GLdouble x, GLdouble y, char *str, void* font=GLUT_BITMAP_8_BY_13)
+void iText(GLdouble x, GLdouble y, const char* str, void* font=GLUT_BITMAP_8_BY_13)
 {
     glRasterPos3d(x, y, 0);
     int i;
@@ -513,7 +525,7 @@ void mouseHandlerFF(int button, int state, int x, int y)
     glFlush();
 }
 
-void iInitialize(int width=500, int height=500, char *title="iGraphics", int keyboardSamplingRate = 16)
+void iInitialize(int width=500, int height=500, const char *title="iGraphics", int keyboardSamplingRate = 16)
 {
 	SetTimer(0, 0, keyboardSamplingRate, keypressHandler);
 

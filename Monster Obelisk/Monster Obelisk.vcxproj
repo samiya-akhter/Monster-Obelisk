@@ -67,6 +67,7 @@
     <ClCompile Include="iMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CombatManager.h" />
     <ClInclude Include="creditpage.h" />
     <ClInclude Include="battletower1.h" />
     <ClInclude Include="howtoplaypage.h" />

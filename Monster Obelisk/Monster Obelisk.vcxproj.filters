@@ -41,5 +41,8 @@
     <ClInclude Include="battletower1.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="CombatManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

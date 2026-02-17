@@ -6,6 +6,7 @@
 #include "howtoplaypage.h"
 #include "wildarea.h"
 #include "battletower1.h"
+#include "CombatManager.h" // Added CombatManager
 #include <ctime>
 
 void drawPlayPage();
@@ -56,12 +57,26 @@ gameState = 7 >> story sequence
 */
 
 
+// Time tracking for DeltaTime
+clock_t lastTime = 0;
 
 void iDraw()
 {
 	iClear();
 	iFilledRectangle(0, 0, 1000, 600);
 	iSetColor(255, 255, 255);
+
+    // DeltaTime Calculation
+    clock_t currentTime = clock();
+    if (lastTime == 0) lastTime = currentTime;
+    float deltaTime = (float)(currentTime - lastTime) / CLOCKS_PER_SEC;
+    lastTime = currentTime;
+
+    // Update Combat System always (or only when needed)
+    // Safer to only update inside current state or keep it running if it has internal state checks
+    if (gameState == 6) {
+        CombatManager::GetInstance().UpdateCombat(deltaTime);
+    }
 
 	if (gameState == 0)
 	{
@@ -100,7 +115,8 @@ void iDraw()
 
 	else if (gameState == 6)
 	{
-		drawBattleTower1();
+		// drawBattleTower1(); // Replaced with Combat System
+        CombatManager::GetInstance().RenderCombat();
 	}
 }
 
@@ -167,9 +183,10 @@ void iPassiveMouseMove(int mx, int my)
 
 void iMouse(int button, int state, int mx, int my)
 {
-	printf("%d %d\n", mx, my);
+	// printf("%d %d\n", mx, my); // Debug printing
 
-	
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) 
+    {
 		
 		if (gameState == 2)  // Credit Page
 			creditMouse(button, state, mx, my);  // pass button & state here
@@ -202,7 +219,16 @@ void iMouse(int button, int state, int mx, int my)
 			wildAreaClick(mx, my);
 		}
 
-	
+        // Story Mode Interaction
+        if (playState == 1) {
+            handleStoryClick(mx, my);
+        }
+
+        // Battle Tower / Combat
+        if (gameState == 6) {
+            CombatManager::GetInstance().OnCleanClick(mx, my);
+        }
+	}
 
 
 	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
@@ -224,27 +250,69 @@ void iSpecialKeyboard(unsigned char key){
 
 void fixedUpdate()
 {
+	// Global movements
 	if (isKeyPressed('w') || isSpecialKeyPressed(GLUT_KEY_UP))
 	{
-		y++;
+		if (gameState == 6) {
+			CombatManager::GetInstance().MovePlayer(0, 5);
+		} else {
+			y++;
+		}
 	}
 	if (isKeyPressed('a') || isSpecialKeyPressed(GLUT_KEY_LEFT))
 	{
-		x--;
+		if (gameState == 6) {
+			CombatManager::GetInstance().MovePlayer(-5, 0);
+		} else {
+			x--;
+		}
 	}
 	if (isKeyPressed('s') || isSpecialKeyPressed(GLUT_KEY_DOWN))
 	{
-		y--;
+		if (gameState == 6) {
+			CombatManager::GetInstance().MovePlayer(0, -5);
+		} else {
+			y--;
+		}
 	}
 	if (isKeyPressed('d') || isSpecialKeyPressed(GLUT_KEY_RIGHT))
 	{
-		x++;
+		if (gameState == 6) {
+			CombatManager::GetInstance().MovePlayer(5, 0);
+		} else {
+			x++;
+		}
 	}
 
-	if (isKeyPressed(' ')) {
+	static bool spaceReleased = true; // Debounce flag
+    if (isKeyPressed(' ')) {
+        if (spaceReleased) {
+            if (gameState == 6) {
+                CombatManager::GetInstance().PlayerAttack(1); // Type 1: Lightning Blast
+            }
+            if (playState == 1) { // Story Mode
+                nextStorySlide();
+            }
+            spaceReleased = false; // Block until released
+        }
 		// Playing the audio once
 		//mciSendString("play ggsong from 0", NULL, 0, NULL);
+	} else {
+        spaceReleased = true; // Key released, reset flag
+    }
+	
+	if (isKeyPressed('f')) {
+		if (gameState == 6) {
+			CombatManager::GetInstance().PlayerAttack(2); // Type 2: Thunder Crash (Wave 3+)
+		}
 	}
+
+    // Exit Combat with ESC
+    if (isKeyPressed(27)) { // 27 is ESC key
+        if (gameState == 6) {
+             gameState = 1; // Return to map/play page
+        }
+    }
 }
  
 
@@ -260,13 +328,17 @@ int main()
 	// If the use of an audio is finished, close it to free memory
 	// mciSendString("close bgsong", NULL, 0, NULL);
 	// mciSendString("close ggsong", NULL, 0, NULL);
-	iSetTimer(3000, updateStory);
+	iSetTimer(30, updateStory);
 	iSetTimer(800, updatePlayPage);
 	srand(time(NULL));
 	shuffleCards(); // Randomize cards at start
 	iSetTimer(20, checkMemoryMatch);
 
-	iInitialize(1000, 600, "Monstrum Obelisk");
+	iInitialize(1000, 600, "Monstrum Obelisk"); // Creates OpenGL Context
+	
+	// Initialize Combat System AFTER OpenGL context is created
+	CombatManager::GetInstance().InitCombat();
+
 	iStart();
 	return 0;
 }

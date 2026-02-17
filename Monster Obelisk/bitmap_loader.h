@@ -26,7 +26,7 @@
 //
 //                To disable this feature, put -1 in this parameter
 //
-void iShowBMPAlternative2(int x, int y, char fileName[], int ignoreColor)
+void iShowBMPAlternative2(int x, int y, const char* fileName, int ignoreColor)
 {
 	FILE *bmpFile;
 	if ((bmpFile = fopen(fileName, "rb")) == NULL)
@@ -82,32 +82,32 @@ void iShowBMPAlternative2(int x, int y, char fileName[], int ignoreColor)
 //  y - y coordinate
 //  fileName - name of the BMP file
 //
-void iShowBMPAlternative(int x, int y, char fileName[])
+void iShowBMPAlternative(int x, int y, const char* fileName)
 {
 	iShowBMPAlternative2(x, y, fileName, -1);
 }
 
-void iShowBMPAlternativeSkipBlack(int x, int y, char fileName[])
+void iShowBMPAlternativeSkipBlack(int x, int y, const char* fileName)
 {
 	iShowBMPAlternative2(x, y, fileName, 0);
 }
 
-void iShowBMPAlternativeSkipRed(int x, int y, char fileName[])
+void iShowBMPAlternativeSkipRed(int x, int y, const char* fileName)
 {
 	iShowBMPAlternative2(x, y, fileName, 0xFF);
 }
 
-void iShowBMPAlternativeSkipGreen(int x, int y, char fileName[])
+void iShowBMPAlternativeSkipGreen(int x, int y, const char* fileName)
 {
 	iShowBMPAlternative2(x, y, fileName, (0xFF << 8));
 }
 
-void iShowBMPAlternativeSkipBlue(int x, int y, char fileName[])
+void iShowBMPAlternativeSkipBlue(int x, int y, const char* fileName)
 {
 	iShowBMPAlternative2(x, y, fileName, (0xFF << 16));
 }
 
-void iShowBMPAlternativeSkipWhite(int x, int y, char fileName[])
+void iShowBMPAlternativeSkipWhite(int x, int y, const char* fileName)
 {
 	iShowBMPAlternative2(x, y, fileName, (1 << 24) - 1);
 }
