@@ -49,6 +49,12 @@ void drawPlayPage()
     }
 	else {
 		iShowImage(0, 0, 1000, 600, iLoadImage(map[playFrame]));
+        
+        // Show "No Lives" warning if player cannot fight
+        if (CombatManager::GetInstance().lives <= 0) {
+            iSetColor(255, 0, 0);
+            iText(320, 580, "NO LIVES! Win Memory Game in Wild Area!", (void*)0x0005);
+        }
 	}
 }
 

@@ -386,7 +386,7 @@ public:
         if (lives <= 0) {
             extern int gameState;
             gameState = 1; // Kick back to map
-            lives = 3; // Reset for next time
+            // lives = 3; // REMOVED: Do not reset lives automatically
             return;
         }
 
@@ -395,7 +395,7 @@ public:
     }
 
     void RestoreLives() {
-        lives = 3;
+        lives = 4;
     }
 
     void AddStrengthBonus(float bonus) {

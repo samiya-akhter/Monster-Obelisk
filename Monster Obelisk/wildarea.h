@@ -50,9 +50,17 @@ void drawWildArea()
 	if (matchesFound == 6) {
 		iSetColor(150, 0, 200);
 		iShowBMP2(0, 0, "Image//fullenergy.bmp",0);
-
-		
+        
+        // Visual confirmation
+        iSetColor(0, 255, 0);
+        iText(380, 50, "LIVES RESTORED!", (void*)0x0005);
 	}
+
+    // Show current lives
+    char livesBuf[32];
+    sprintf_s(livesBuf, 32, "Lives: %d", CombatManager::GetInstance().lives);
+    iSetColor(255, 255, 255);
+    iText(900, 560, livesBuf, (void*)0x0008);
 }
 void wildAreaClick(int mx, int my) {
 	if (lockBoard != 0) return;
