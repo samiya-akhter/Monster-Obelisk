@@ -43,7 +43,9 @@ void drawWildArea()
 
 	if (matchesFound == 6) {
 		iSetColor(150, 0, 200);
-		iText(420, 500, "YOU WIN!", GLUT_BITMAP_HELVETICA_18);
+		iShowBMP2(0, 0, "Image//fullenergy.bmp",0);
+
+		
 	}
 }
 void wildAreaClick(int mx, int my) {
