@@ -50,4 +50,9 @@ void creditMouse(int button, int state, int mx, int my)
 	}
 }
 
+void backClick(int mx, int my) {
+	if (mx >= 425 && mx <=560 && my>= 55 && my <= 94) {
+		gameState = 0;
+	}
+}
 #endif

@@ -192,7 +192,7 @@ void iPassiveMouseMove(int mx, int my)
 
 void iMouse(int button, int state, int mx, int my)
 {
-	// printf("%d %d\n", mx, my); // Debug printing
+	 printf("%d %d\n", mx, my); // Debug printing
 
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) 
     {
@@ -205,6 +205,10 @@ void iMouse(int button, int state, int mx, int my)
 			playClick(mx, my);
 		if (gameState == 0) // Should check if credit button clicked
 			creditClick(mx, my);
+
+		if (gameState == 2)// Should check if credit button clicked
+			backClick(mx, my);
+
 		if (gameState == 0) // ...
 			settingClick(mx, my);
 		if (gameState == 0)
