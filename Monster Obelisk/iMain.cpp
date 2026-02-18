@@ -1,5 +1,5 @@
 #include "iGraphics.h"
-#include "CombatManager.h" // Same directory include preferred after iGraphics
+#include "CombatManager.h" 
 #include "menu.h"
 #include "creditpage.h"
 #include "playpage.h"
