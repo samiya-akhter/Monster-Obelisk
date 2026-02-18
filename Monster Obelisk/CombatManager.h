@@ -227,7 +227,7 @@ public:
              // If in range and cooldown ready, ATTACK!
              if (dist < 150.0f && enemyAttackTimer <= 0) {
                  playerMonster.currentHealth -= enemyMonster.attackPower;
-                 enemyAttackTimer = 1.0f; // Limit attack speed (1 attack per second)
+                 enemyAttackTimer = 1.5f; // Limit attack speed (1 attack per second)
                  
                  if (playerMonster.currentHealth <= 0) {
                      playerMonster.currentHealth = 0;
