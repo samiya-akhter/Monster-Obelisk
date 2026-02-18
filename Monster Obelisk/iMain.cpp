@@ -27,8 +27,10 @@ void playPage();
 void creditPage();
 void settingPage();
 
-void playClick();
-void creditClick();
+void playClick(int mx, int my);
+void creditClick(int mx, int my);
+void settingClick(int mx, int my);
+void howToPlayClick(int mx, int my);
 
 int playbutton = 0;
 int creditbutton = 0;
@@ -201,12 +203,18 @@ void iMouse(int button, int state, int mx, int my)
 		// Other pages
 		if (gameState == 0)
 			playClick(mx, my);
-		if (gameState == 0)
+		if (gameState == 0) // Should check if credit button clicked
 			creditClick(mx, my);
-		if (gameState == 0)
+		if (gameState == 0) // ...
 			settingClick(mx, my);
 		if (gameState == 0)
 			howToPlayClick(mx, my);
+
+        // Setting Page Interactions
+       /* if (gameState == 3) {
+
+			settingClick(mx, my);
+        }*/
 
 
 		//shows the story
@@ -363,8 +371,9 @@ int main()
 	//mciSendString("play bgsong repeat", NULL, 0, NULL);
 
 	// If the use of an audio is finished, close it to free memory
-	// mciSendString("close bgsong", NULL, 0, NULL);
-	// mciSendString("close ggsong", NULL, 0, NULL);
+    mciSendString("open \"Audios//main.mp3\" alias mainMusic", NULL, 0, NULL);
+    mciSendString("play mainMusic repeat", NULL, 0, NULL);
+
 	iSetTimer(30, updateStory);
 	iSetTimer(800, updatePlayPage);
 	srand(time(NULL));
