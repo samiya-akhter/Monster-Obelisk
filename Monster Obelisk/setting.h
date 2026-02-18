@@ -29,6 +29,12 @@ void settingClick(int mx, int my) {
 }
 
 
+void settingBackClick(int mx, int my) {
+	if (mx >= 308 && mx <= 480 && my >= 141 && my <= 181) {
+		gameState = 0;
+	}
+}
+
 
 
 #endif

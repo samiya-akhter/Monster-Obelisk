@@ -28,28 +28,6 @@ void creditPassiveMouseMove(int mx, int my)
 		backHover = 0;
 }
 
-// Detect press and release
-void creditMouse(int button, int state, int mx, int my)
-{
-	if (button == GLUT_LEFT_BUTTON)
-	{
-		if (state == GLUT_DOWN)
-		{
-			if (mx >= backX && mx <= backX + backWidth &&
-				my >= backY && my <= backY + backHeight)
-				backPressed = 1;
-		}
-		else if (state == GLUT_UP)
-		{
-			if (backPressed && mx >= backX && mx <= backX + backWidth &&
-				my >= backY && my <= backY + backHeight)
-				gameState = 0; // Go back to menu
-
-			backPressed = 0;
-		}
-	}
-}
-
 void backClick(int mx, int my) {
 	if (mx >= 425 && mx <=560 && my>= 55 && my <= 94) {
 		gameState = 0;

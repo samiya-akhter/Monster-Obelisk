@@ -197,8 +197,7 @@ void iMouse(int button, int state, int mx, int my)
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) 
     {
 		
-		if (gameState == 2)  // Credit Page
-			creditMouse(button, state, mx, my);  // pass button & state here
+		
 
 		// Other pages
 		if (gameState == 0)
@@ -214,6 +213,8 @@ void iMouse(int button, int state, int mx, int my)
 		if (gameState == 0)
 			howToPlayClick(mx, my);
 
+		if (gameState == 3)
+			settingBackClick(mx, my);
         // Setting Page Interactions
        /* if (gameState == 3) {
 
