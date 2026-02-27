@@ -7,6 +7,9 @@
 #include <ctime>
 #include <cstdlib>
 
+//int GROUND_Y = 175;
+
+
 // Forward declarations for iGraphics functions
 extern void iShowImage(int x, int y, int width, int height, unsigned int texture);
 extern void iSetColor(double r, double g, double b);
@@ -45,21 +48,21 @@ public:
         LoadAnimationFrames(viviRunTextures, "Image//Vivi//vivi_walk", 25);
         
         // Load Environment
-        bgLayers[0] = iLoadImage("Image//runbg1.png");
-        bgLayers[1] = iLoadImage("Image//runbg2.png");
+        bgLayers[0] = iLoadImage("Image//side_quest (1).png");
+        bgLayers[1] = iLoadImage("Image//side_quest (2).png");
         
         // obstacles
-        lavaStoneTex = iLoadImage("Image//lava stone.png", 255, 255, 255); // Remove white background
-        monsterTex = iLoadImage("Image//black_running (1).png", 0, 0, 0); // Black bg removal if BMP? Or wait, usually white or specific color. 
+        lavaStoneTex = iLoadImage("Image//obstacle//lava stone.png"); // Remove white background
+        monsterTex = iLoadImage("Image//black//black_running (1).png"); // Black bg removal if BMP? Or wait, usually white or specific color. 
         // Based on other code, 255,255,255 might be transparent color. Let's try 255,255,255.
         // Re-loading monster with transparency if needed. 
         // Actually iLoadImage without args doesn't key out color. 
         // Let's assume transparent PNGs for lava stone.
         // Monster is BMP. Code uses 255,255,255 in CombatManager. 
-        monsterTex = iLoadImage("Image//black_running (1).png", 255, 255, 255); 
+        monsterTex = iLoadImage("Image//black//black_running (1).png"); 
 
         // Crystals
-        crystalTex = iLoadImage("Image//purple crystal.png", 255, 255, 255);
+        crystalTex = iLoadImage("Image//obstacle//red crystal.png");
 
         Reset();
         initialized = true;
@@ -81,6 +84,7 @@ public:
     void Reset() {
         playerX = 100;
         playerY = GROUND_Y;
+		//playerY = 123;
         velocityY = 0;
         isJumping = false;
         isGameOver = false;
@@ -300,12 +304,12 @@ private:
         currentCharacter(0), 
         viviUnlocked(false),
         showUnlockMessage(false),
-        GROUND_Y(50.0f),
+        GROUND_Y(173.0f),
         GRAVITY(2000.0f),
         JUMP_FORCE(900.0f),
         // Initialize other primitive members
         playerX(100.0f),
-        playerY(50.0f),
+        playerY(175.0f),
         velocityY(0.0f),
         isJumping(false),
         moveSpeed(400.0f),

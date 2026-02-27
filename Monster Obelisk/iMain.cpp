@@ -376,8 +376,8 @@ int main()
 	//mciSendString("play bgsong repeat", NULL, 0, NULL);
 
 	// If the use of an audio is finished, close it to free memory
-    mciSendString("open \"Audios//main.mp3\" alias mainMusic", NULL, 0, NULL);
-    mciSendString("play mainMusic repeat", NULL, 0, NULL);
+   // mciSendString("open \"Audios//main.mp3\" alias mainMusic", NULL, 0, NULL);
+    //mciSendString("play mainMusic repeat", NULL, 0, NULL);
 
 	iSetTimer(30, updateStory);
 	iSetTimer(800, updatePlayPage);
