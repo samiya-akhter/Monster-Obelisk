@@ -1,5 +1,6 @@
 #ifndef PLAYPAGE_H
 #define PLAYPAGE_H
+#include "AdvancedCombatManager.h"
 extern int playState;
 extern int gameState;
 
@@ -104,6 +105,11 @@ void mapClick(int mx, int my) {
         if (CombatManager::GetInstance().lives > 0) {
 		    gameState = 6;
         }
+	}
+	// Coordinates for Battle Tower 2 (PLACEHOLDER - adjust to match map)
+	if (mx >= 790 && mx <= 850 && my >= 220 && my <= 360) {
+		AdvancedCombatManager::GetInstance().Init();
+		gameState = 7;
 	}
 }
 #endif

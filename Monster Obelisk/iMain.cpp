@@ -8,6 +8,7 @@
 #include "wildarea.h"
 #include "battletower1.h"
 #include "RunnerGame.h"
+#include "AdvancedCombatManager.h"
 #include <ctime>
 
 void drawPlayPage();
@@ -127,6 +128,17 @@ void iDraw()
         RunnerGame::GetInstance().Update(deltaTime);
         RunnerGame::GetInstance().Render();
     }
+
+	else if (gameState == 7) { 
+		AdvancedCombatManager::GetInstance().Update(0.016f);
+		AdvancedCombatManager::GetInstance().Render();
+	}
+
+	else if (gameState == 9)
+	{
+		AdvancedCombatManager::GetInstance().Update(deltaTime);
+		AdvancedCombatManager::GetInstance().Render();
+	}
 }
 
 
@@ -300,6 +312,51 @@ void fixedUpdate()
         return; // Stop processing other fixedUpdates
     }
 
+	if (gameState == 7) {
+		// Player Movement
+		if (isKeyPressed('a') || isKeyPressed('A')) {
+			AdvancedCombatManager::GetInstance().MovePlayer(-3); // Move Left
+		}
+		if (isKeyPressed('d') || isKeyPressed('D')) {
+			AdvancedCombatManager::GetInstance().MovePlayer(3);  // Move Right
+		}
+
+		// Basic Attack - key 'W' (Lightning Blast)
+		static bool wKeyReleased = true;
+		if (isKeyPressed('w') || isKeyPressed('W')) {
+			if (wKeyReleased) {
+				AdvancedCombatManager::GetInstance().PlayerAttack(1);
+				wKeyReleased = false;
+			}
+		} else {
+			wKeyReleased = true;
+		}
+
+		// Thunder Crash - key 'F' (Wave 3+)
+		static bool fKeyReleased = true;
+		if (isKeyPressed('f') || isKeyPressed('F')) {
+			if (fKeyReleased) {
+				AdvancedCombatManager::GetInstance().PlayerAttack(2);
+				fKeyReleased = false;
+			}
+		} else {
+			fKeyReleased = true;
+		}
+
+		// Exit level
+		if (isKeyPressed(27)) { // ESC
+			gameState = 1; // Go back to map/menu
+		}
+	}
+
+if (gameState == 9) {
+	if (isKeyPressed('a')) AdvancedCombatManager::GetInstance().MovePlayer(-5);
+	if (isKeyPressed('d')) AdvancedCombatManager::GetInstance().MovePlayer(5);
+	if (isKeyPressed(' ')) {
+		AdvancedCombatManager::GetInstance().PlayerAttack();
+	}
+}
+
 	// Global movements
 	if (isKeyPressed('w') || isSpecialKeyPressed(GLUT_KEY_UP))
 	{
@@ -390,6 +447,7 @@ int main()
 	// Initialize Combat System AFTER OpenGL context is created
 	CombatManager::GetInstance().InitCombat();
     RunnerGame::GetInstance().Init();
+	AdvancedCombatManager::GetInstance().Init();
 
 	iStart();
 	return 0;

@@ -47,5 +47,8 @@
     <ClInclude Include="RunnerGame.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="AdvancedCombatManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

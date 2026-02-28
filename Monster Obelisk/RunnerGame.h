@@ -235,9 +235,9 @@ public:
             if (entities[i].active) {
                 if (entities[i].type == 1) { // Monster
                     // Maybe animate monster? using static tex for now
-                     iShowImage(entities[i].x, entities[i].y, entities[i].width, entities[i].height, entities[i].textureID);
+                     iShowImage((int)entities[i].x, (int)entities[i].y, entities[i].width, entities[i].height, entities[i].textureID);
                 } else {
-                     iShowImage(entities[i].x, entities[i].y, entities[i].width, entities[i].height, entities[i].textureID);
+                     iShowImage((int)entities[i].x, (int)entities[i].y, entities[i].width, entities[i].height, entities[i].textureID);
                 }
             }
         }
