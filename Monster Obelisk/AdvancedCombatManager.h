@@ -96,8 +96,8 @@ public:
 		enemyHP  = bosses[idx].health;
 		
 		// Reset positions
-		playerX  = 100.0f;
-		enemyX   = 700.0f;
+		// playerX  = 100.0f; // Do not initialize player position between waves
+		enemyX   = playerX + 600.0f;
 
 		isTransitioning     = false;
 		currentState        = ADV_PLAYER_TURN;
@@ -132,6 +132,7 @@ public:
 					SetupWave();
 				} else {
 					currentState = ADV_VICTORY;
+					isTransitioning = false;
 				}
 			}
 			return;
@@ -295,7 +296,9 @@ public:
 
 		// Wave counter
 		char waveBuf[32];
-		sprintf_s(waveBuf, 32, "Wave: %d / 3", currentWave + 1);
+		int displayWave = currentWave + 1;
+		if (displayWave > 3) displayWave = 3;
+		sprintf_s(waveBuf, 32, "Wave: %d / 3", displayWave);
 		iSetColor(255, 255, 255);
 		iText(430, 555, waveBuf, (void*)0x0008);
 
@@ -316,9 +319,9 @@ public:
 		if (currentState == ADV_PLAYER_TURN || currentState == ADV_PLAYER_ATTACK || isTransitioning) {
 			playerX += dx;
 			if (isTransitioning) {
-				bgOffset -= dx * 1.5f; // Fast Parallax effect to simulate running to next wave
+				bgOffset -= dx * 1.8f; // Fast Parallax effect to simulate running to next wave
 			} else {
-				bgOffset -= dx * 0.1f; // Subtle background parallax during normal combat
+				bgOffset -= dx * 0.2f; // Subtle background parallax during normal combat
 			}
 			if (playerX < 0)   playerX = 0;
 			if (playerX > 800) playerX = 800;
