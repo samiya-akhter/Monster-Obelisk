@@ -83,6 +83,9 @@ public:
 		LoadAnimationFrames(playerMonster.attack1Frames, "Image//Vivi//vivi_lb", 25);
 		LoadAnimationFrames(playerMonster.attack2Frames, "Image//Vivi//vivi_tc", 25);
 
+		// Load Animations for Enemy (from Tower 2)
+		LoadAnimationFrames(enemyMonster.idleFrames, "Image//black//black_running", 16);
+
 		playerMonster.x = PLAYER_START_X;
 		playerMonster.y = PLAYER_START_Y;
 
@@ -105,14 +108,18 @@ public:
 		playerMonster.maxHealth = 100.0f + (50.0f * (waveIndex - 1));
 		playerMonster.currentHealth = playerMonster.maxHealth;
 
-		enemyMonster.name = "Evil Minion";
+		// Reset positions
+		playerMonster.x = PLAYER_START_X;
+		playerMonster.y = PLAYER_START_Y;
+
+		enemyMonster.name = "Void Creature";
 		enemyMonster.textureIdle = "Image//evil_monster_idle.bmp";
 		enemyMonster.textureID = iLoadImage(enemyMonster.textureIdle.c_str(), 255, 255, 255); // Remove white BG
 
 		// Scale difficulty - Balanced
-		enemyMonster.maxHealth = 250.0f * waveIndex;
+		enemyMonster.maxHealth = 180.0f * waveIndex;
 		enemyMonster.currentHealth = enemyMonster.maxHealth;
-		enemyMonster.attackPower = 10.0f + (10.0f * waveIndex); // 20, 30, 40...
+		enemyMonster.attackPower = 8.0f + (5.0f * waveIndex); // Slightly increased attack
 		enemyMonster.x = ENEMY_START_X;
 		enemyMonster.y = ENEMY_START_Y;
 
@@ -170,7 +177,7 @@ public:
 
 		// --- ANIMATION UPDATE ---
 		playerMonster.animTimer += deltaTime;
-		float frameDuration = 0.04f; // 25fps -> 1 second for 25 frames
+		float frameDuration = 0.25f; // Slower animation
 
 		if (currentState == PLAYER_ATTACK) {
 			// Attack Animation (Play Once)
@@ -210,6 +217,16 @@ public:
 				playerMonster.isMoving = false;
 			}
 		}
+
+		// --- Enemy Animation Update ---
+		enemyMonster.animTimer += deltaTime;
+		if (enemyMonster.animTimer >= frameDuration) {
+			enemyMonster.animTimer = 0;
+			enemyMonster.currentFrame++;
+			if (!enemyMonster.idleFrames.empty() && enemyMonster.currentFrame >= (int)enemyMonster.idleFrames.size()) {
+				enemyMonster.currentFrame = 0;
+			}
+		}
 		// ------------------------
 
 		// WAVE CLEAR LOGIC
@@ -246,7 +263,7 @@ public:
 			const float stopDistance = 150.0f; // Attack range
 
 			if (distance > stopDistance) {
-				float speed = 100.0f; // Pixels per second
+				float speed = 30.0f; // Pixels per second
 
 				// Move towards player
 				if (dx > 0) enemyMonster.x += speed * deltaTime;
@@ -270,7 +287,7 @@ public:
 			break;
 
 		case PLAYER_ATTACK:
-			if (stateTimer > 0.25f) { // Very fast attack
+			if (stateTimer > 1.0f) { // Slower attack transition
 				// Check distance for hit
 				float dx = playerMonster.x - enemyMonster.x;
 				float dy = playerMonster.y - enemyMonster.y;
@@ -311,12 +328,12 @@ public:
 
 		// Draw Player (Animated)
 		unsigned int tex = playerMonster.textureID;
-		int drawW = 220; // Slightly smaller base to balance with attack
-		int drawH = 220;
+		int drawW = 160; // Slightly smaller base to balance with attack
+		int drawH = 160;
 
 		if (currentState == PLAYER_ATTACK) {
-			drawW = 320; // Increased size to compensate for shrinking content during attack
-			drawH = 320;
+			drawW = 240; // Increased size to compensate for shrinking content during attack
+			drawH = 240;
 			if (playerMonster.currentAttackType == 1 && !playerMonster.attack1Frames.empty()) {
 				tex = playerMonster.attack1Frames[playerMonster.currentFrame % playerMonster.attack1Frames.size()];
 			}
@@ -337,25 +354,29 @@ public:
 		}
 
 		iShowImage((int)playerMonster.x, (int)playerMonster.y, drawW, drawH, tex);
-		DrawHealthBar(playerMonster.x + 20, playerMonster.y + 210, playerMonster.currentHealth, playerMonster.maxHealth, 0, 255, 0);
+		DrawHealthBar(playerMonster.x + 20, playerMonster.y + 250, playerMonster.currentHealth, playerMonster.maxHealth, 0, 255, 0);
 		// HP Text
 		char hpBuffer[32];
 		sprintf_s(hpBuffer, 32, "HP: %d/%d", (int)playerMonster.currentHealth, (int)playerMonster.maxHealth);
 		iSetColor(255, 255, 255);
-		iText(playerMonster.x + 20, playerMonster.y + 225, hpBuffer, (void*)0x0008);
+		iText(playerMonster.x + 20, playerMonster.y + 265, hpBuffer, (void*)0x0008);
 
-		// Draw Enemy (Scaled to 200x200)
-		iShowImage((int)enemyMonster.x, (int)enemyMonster.y, 200, 200, enemyMonster.textureID);
-		DrawHealthBar(enemyMonster.x + 20, enemyMonster.y + 210, enemyMonster.currentHealth, enemyMonster.maxHealth, 255, 0, 0);
+		// Draw Enemy (Scaled to 150x150)
+		unsigned int enemyTex = enemyMonster.textureID;
+		if (!enemyMonster.idleFrames.empty()) {
+			enemyTex = enemyMonster.idleFrames[enemyMonster.currentFrame % enemyMonster.idleFrames.size()];
+		}
+		iShowImage((int)enemyMonster.x, (int)enemyMonster.y, 150, 150, enemyTex);
+		DrawHealthBar(enemyMonster.x + 20, enemyMonster.y + 250, enemyMonster.currentHealth, enemyMonster.maxHealth, 255, 0, 0);
 		// HP Text
 		sprintf_s(hpBuffer, 32, "HP: %d/%d", (int)enemyMonster.currentHealth, (int)enemyMonster.maxHealth);
 		iSetColor(255, 255, 255);
-		iText(enemyMonster.x + 20, enemyMonster.y + 225, hpBuffer, (void*)0x0008);
+		iText(enemyMonster.x + 20, enemyMonster.y + 265, hpBuffer, (void*)0x0008);
 
 		// Attack Feedback
 		if (attackFeedbackTimer > 0) {
 			iSetColor(255, 0, 0);
-			iText(playerMonster.x, playerMonster.y + 300, currentAttackName.c_str(), (void*)0x0008);
+			iText(playerMonster.x, playerMonster.y + 310, currentAttackName.c_str(), (void*)0x0008);
 		}
 
 		// Wave Notification and Clear

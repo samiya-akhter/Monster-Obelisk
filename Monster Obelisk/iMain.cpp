@@ -314,10 +314,10 @@ void fixedUpdate()
 
 	if (gameState == 7) {
 		// Player Movement
-		if (isKeyPressed('a') || isKeyPressed('A')) {
+		if (isKeyPressed('a') || isKeyPressed('A') || isSpecialKeyPressed(GLUT_KEY_LEFT)) {
 			AdvancedCombatManager::GetInstance().MovePlayer(-3); // Move Left
 		}
-		if (isKeyPressed('d') || isKeyPressed('D')) {
+		if (isKeyPressed('d') || isKeyPressed('D') || isSpecialKeyPressed(GLUT_KEY_RIGHT)) {
 			AdvancedCombatManager::GetInstance().MovePlayer(3);  // Move Right
 		}
 
@@ -350,8 +350,8 @@ void fixedUpdate()
 	}
 
 if (gameState == 9) {
-	if (isKeyPressed('a')) AdvancedCombatManager::GetInstance().MovePlayer(-5);
-	if (isKeyPressed('d')) AdvancedCombatManager::GetInstance().MovePlayer(5);
+	if (isKeyPressed('a') || isKeyPressed('A') || isSpecialKeyPressed(GLUT_KEY_LEFT)) AdvancedCombatManager::GetInstance().MovePlayer(-3);
+	if (isKeyPressed('d') || isKeyPressed('D') || isSpecialKeyPressed(GLUT_KEY_RIGHT)) AdvancedCombatManager::GetInstance().MovePlayer(3);
 	if (isKeyPressed(' ')) {
 		AdvancedCombatManager::GetInstance().PlayerAttack();
 	}
@@ -361,7 +361,7 @@ if (gameState == 9) {
 	if (isKeyPressed('w') || isSpecialKeyPressed(GLUT_KEY_UP))
 	{
 		if (gameState == 6) {
-			CombatManager::GetInstance().MovePlayer(0, 5);
+			CombatManager::GetInstance().MovePlayer(0, 3);
 		} else {
 			y++;
 		}
@@ -369,7 +369,7 @@ if (gameState == 9) {
 	if (isKeyPressed('a') || isSpecialKeyPressed(GLUT_KEY_LEFT))
 	{
 		if (gameState == 6) {
-			CombatManager::GetInstance().MovePlayer(-5, 0);
+			CombatManager::GetInstance().MovePlayer(-3, 0);
 		} else {
 			x--;
 		}
@@ -377,7 +377,7 @@ if (gameState == 9) {
 	if (isKeyPressed('s') || isSpecialKeyPressed(GLUT_KEY_DOWN))
 	{
 		if (gameState == 6) {
-			CombatManager::GetInstance().MovePlayer(0, -5);
+			CombatManager::GetInstance().MovePlayer(0, -3);
 		} else {
 			y--;
 		}
@@ -385,7 +385,7 @@ if (gameState == 9) {
 	if (isKeyPressed('d') || isSpecialKeyPressed(GLUT_KEY_RIGHT))
 	{
 		if (gameState == 6) {
-			CombatManager::GetInstance().MovePlayer(5, 0);
+			CombatManager::GetInstance().MovePlayer(3, 0);
 		} else {
 			x++;
 		}

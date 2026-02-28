@@ -184,7 +184,7 @@ public:
 
         // --- Animation ---
         animTimer += deltaTime;
-        if (animTimer >= 0.05f) {
+        if (animTimer >= 0.15f) {
             animTimer = 0;
             currentFrame++;
         }

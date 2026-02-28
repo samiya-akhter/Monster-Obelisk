@@ -62,11 +62,11 @@ public:
 		enemyFrames.clear();
 
 		// Boss 1: Forest
-		bosses.push_back({ "Shadow Golem",  "Image//boss1.png", "Image//bg_forest.png",  300.0f, 10.0f, 0, 0 });
+		bosses.push_back({ "Shadow Golem",  "Image//boss1.png", "Image//combat render.png",  180.0f, 8.0f, 0, 0 });
 		// Boss 2: Volcano
-		bosses.push_back({ "Inferno Drake", "Image//boss2.png", "Image//bg_volcano.png", 500.0f, 20.0f, 0, 0 });
+		bosses.push_back({ "Inferno Drake", "Image//boss2.png", "Image//combat render.png", 280.0f, 12.0f, 0, 0 });
 		// Boss 3: Void
-		bosses.push_back({ "Void Sentinel", "Image//boss3.png", "Image//bg_void.png",    800.0f, 35.0f, 0, 0 });
+		bosses.push_back({ "Void Sentinel", "Image//boss3.png", "Image//combat render.png",  450.0f, 18.0f, 0, 0 });
 
 		for (auto& b : bosses) {
 			b.bgID      = iLoadImage(b.bgPath.c_str());
@@ -94,6 +94,9 @@ public:
 
 		int idx  = (currentWave < 3) ? currentWave : 2;
 		enemyHP  = bosses[idx].health;
+		
+		// Reset positions
+		playerX  = 100.0f;
 		enemyX   = 700.0f;
 
 		isTransitioning     = false;
@@ -113,6 +116,15 @@ public:
 
 		// Wave transition countdown
 		if (isTransitioning) {
+			// Player moves manually now during this state!
+			
+			// Keep animations playing if they are moving (relies on frame update)
+			animTimer += deltaTime;
+			if (animTimer >= 0.25f) {
+				animTimer = 0;
+				playerFrame++;
+			}
+
 			transitionTimer -= deltaTime;
 			if (transitionTimer <= 0) {
 				currentWave++;
@@ -125,12 +137,9 @@ public:
 			return;
 		}
 
-		// Parallax
-		bgOffset = -(playerX * 0.1f);
-
-		// Animation cycling at 25 fps
+		// Animation cycling
 		animTimer += deltaTime;
-		if (animTimer >= 0.04f) {
+		if (animTimer >= 0.25f) {
 			animTimer = 0;
 			playerFrame++;
 			enemyFrame++;
@@ -140,7 +149,7 @@ public:
 		float dist = fabs(playerX - enemyX);
 		const float stopDist = 150.0f;
 		if (dist > stopDist) {
-			float speed = 35.0f;
+			float speed = 30.0f;
 			if (playerX > enemyX) enemyX += speed * deltaTime;
 			else                   enemyX -= speed * deltaTime;
 		}
@@ -160,8 +169,8 @@ public:
 			}
 		}
 
-		// Process player attack after 0.25 s (AABB distance check)
-		if (currentState == ADV_PLAYER_ATTACK && stateTimer > 0.25f) {
+		// Process player attack after 1.0 s (AABB distance check)
+		if (currentState == ADV_PLAYER_ATTACK && stateTimer > 1.0f) {
 			float attackDist = fabs(playerX - enemyX);
 			if (attackDist < 250.0f) {
 				enemyHP  -= currentAttackDamage;
@@ -206,21 +215,24 @@ public:
 	void StartTransition() {
 		enemyHP         = 0;
 		isTransitioning = true;
-		transitionTimer = 3.0f;
+		transitionTimer = 5.0f; // Give more time to manually walk forward
 	}
 
 	void Render() {
 		int idx = (currentWave < 3) ? currentWave : 2;
 
 		// Background
-		iShowImage((int)bgOffset - 50, 0, 1100, 600, bosses[idx].bgID);
+		float wrapOffset = fmod(bgOffset, 1100.0f);
+		if (wrapOffset > 0) wrapOffset -= 1100.0f;
+		iShowImage((int)wrapOffset, 0, 1100, 600, bosses[idx].bgID);
+		iShowImage((int)wrapOffset + 1100, 0, 1100, 600, bosses[idx].bgID);
 
 		// Draw Player (animated)
 		{
-			int drawW = 140, drawH = 140;
+			int drawW = 100, drawH = 100;
 			std::vector<unsigned int>* anim = &playerWalkFrames;
 			if (currentState == ADV_PLAYER_ATTACK) {
-				drawW = 200; drawH = 200;
+				drawW = 150; drawH = 150;
 				anim = (currentAttackType == 2) ? &playerTCFrames : &playerLBFrames;
 			}
 			if (!anim->empty()) {
@@ -230,35 +242,35 @@ public:
 		}
 
 		// Player HP bar
-		DrawHealthBar(playerX + 20, 290, playerHP, playerMaxHP, 0, 255, 0);
+		DrawHealthBar(playerX + 20, 180, playerHP, playerMaxHP, 0, 255, 0);
 		char phpBuf[32];
 		sprintf_s(phpBuf, 32, "HP: %d/%d", (int)playerHP, (int)playerMaxHP);
 		iSetColor(255, 255, 255);
-		iText(playerX + 20, 305, phpBuf, (void*)0x0008);
+		iText(playerX + 20, 200, phpBuf, (void*)0x0008);
 
 		// Draw Enemy (animated)
 		if (!enemyFrames.empty()) {
 			unsigned int tex = enemyFrames[enemyFrame % enemyFrames.size()];
-			iShowImage((int)enemyX, 50, 140, 140, tex);
+			iShowImage((int)enemyX, 50, 100, 100, tex);
 		} else {
-			iShowImage((int)enemyX, 50, 140, 140, bosses[idx].textureID);
+			iShowImage((int)enemyX, 50, 100, 100, bosses[idx].textureID);
 		}
 
 		// Enemy HP bar
-		DrawHealthBar(enemyX + 20, 290, enemyHP, bosses[idx].health, 255, 0, 0);
+		DrawHealthBar(enemyX + 20, 180, enemyHP, bosses[idx].health, 255, 0, 0);
 		char ehpBuf[32];
 		sprintf_s(ehpBuf, 32, "HP: %d/%d", (int)enemyHP, (int)bosses[idx].health);
 		iSetColor(255, 255, 255);
-		iText(enemyX + 20, 305, ehpBuf, (void*)0x0008);
+		iText(enemyX + 20, 200, ehpBuf, (void*)0x0008);
 
 		// Boss name
 		iSetColor(255, 100, 100);
-		iText(enemyX + 20, 320, bosses[idx].name.c_str(), (void*)0x0008);
+		iText(enemyX + 20, 220, bosses[idx].name.c_str(), (void*)0x0008);
 
 		// Attack feedback
 		if (attackFeedbackTimer > 0) {
 			iSetColor(255, 50, 50);
-			iText(playerX, 330, currentAttackName.c_str(), (void*)0x0008);
+			iText(playerX, 300, currentAttackName.c_str(), (void*)0x0008);
 		}
 
 		// Wave start message
@@ -301,8 +313,13 @@ public:
 	}
 
 	void MovePlayer(float dx) {
-		if (currentState == ADV_PLAYER_TURN || currentState == ADV_PLAYER_ATTACK) {
+		if (currentState == ADV_PLAYER_TURN || currentState == ADV_PLAYER_ATTACK || isTransitioning) {
 			playerX += dx;
+			if (isTransitioning) {
+				bgOffset -= dx * 1.5f; // Fast Parallax effect to simulate running to next wave
+			} else {
+				bgOffset -= dx * 0.1f; // Subtle background parallax during normal combat
+			}
 			if (playerX < 0)   playerX = 0;
 			if (playerX > 800) playerX = 800;
 		}
