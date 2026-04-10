@@ -6,6 +6,7 @@
 #include <cmath>
 #include <ctime>
 #include <cstdlib>
+#include "CombatManager.h"
 
 //int GROUND_Y = 175;
 
@@ -45,7 +46,7 @@ public:
         LoadAnimationFrames(kaelJumpTextures, "Image//Kael//Kael_jumping", 16);
         
         // Load Vivi Animations (Unlockable)
-        LoadAnimationFrames(viviRunTextures, "Image//Vivi//vivi_walk", 25);
+        LoadAnimationFrames(viviRunTextures, "Image//Monster Images//Player Monsters//Vivi//Vivi Walk Right//vivi_walk", 25);
         
         // Load Environment
         bgLayers[0] = iLoadImage("Image//side_quest (1).png");
@@ -53,13 +54,13 @@ public:
         
         // obstacles
         lavaStoneTex = iLoadImage("Image//obstacle//lava stone.png"); // Remove white background
-        monsterTex = iLoadImage("Image//black//black_running (1).png"); // Black bg removal if BMP? Or wait, usually white or specific color. 
+        monsterTex = iLoadImage("Image//Monster Images//Black//Black Walk Left//black_running (1).png"); // Black bg removal if BMP? Or wait, usually white or specific color. 
         // Based on other code, 255,255,255 might be transparent color. Let's try 255,255,255.
         // Re-loading monster with transparency if needed. 
         // Actually iLoadImage without args doesn't key out color. 
         // Let's assume transparent PNGs for lava stone.
         // Monster is BMP. Code uses 255,255,255 in CombatManager. 
-        monsterTex = iLoadImage("Image//black//black_running (1).png"); 
+        monsterTex = iLoadImage("Image//Monster Images//Black//Black Walk Left//black_running (1).png"); 
 
         // Crystals
         crystalTex = iLoadImage("Image//obstacle//red crystal.png");
@@ -88,7 +89,7 @@ public:
         velocityY = 0;
         isJumping = false;
         isGameOver = false;
-        showUnlockMessage = false; // Reset message flag
+        unlockMessageType = 0; // Reset message flag
         score = 0;
         coins = 0;
         entities.clear();
@@ -105,7 +106,7 @@ public:
 
     void Update(float deltaTime) {
         if (isGameOver) return;
-        if (showUnlockMessage) return; // Pause game for message
+        if (unlockMessageType > 0) return; // Pause game for message
 
         // --- Player Physics ---
         if (isJumping) {
@@ -167,11 +168,27 @@ public:
                 if (entities[i].type == 2) { // Crystal
                     coins++;
                     entities[i].active = false;
-                    if (coins >= 5 ) {
-                         if (!viviUnlocked) {
-                             viviUnlocked = true;
-                             showUnlockMessage = true; // Trigger pause and message
+                    
+                    int currentTower = CombatManager::GetInstance().lastTowerPlayed;
+                    
+                    if (currentTower == 1 && coins >= 5) {
+                         if (!CombatManager::GetInstance().dawnUnlocked) {
+                             CombatManager::GetInstance().dawnUnlocked = true;
+                             unlockMessageType = 1; // Trigger Dawn unlock
                          }
+                    } else if (currentTower == 3 && coins >= 10) {
+                         if (!CombatManager::GetInstance().drakeUnlocked) {
+                             CombatManager::GetInstance().drakeUnlocked = true;
+                             unlockMessageType = 2; // Trigger Drake unlock
+                         }
+                    }
+                    // Endgame: all towers cleared, need 10 crystals
+                    if (CombatManager::GetInstance().allTowersCleared
+                        && CombatManager::GetInstance().lastTowerPlayed == 4
+                        && !CombatManager::GetInstance().endgameRunnerDone
+                        && coins >= 10) {
+                        CombatManager::GetInstance().endgameRunnerDone = true;
+                        unlockMessageType = 3; // Trigger endgame runner completion
                     }
                 } else { // Obstacle
                     isGameOver = true;
@@ -248,16 +265,37 @@ public:
         iSetColor(255, 215, 0); // Gold
         iText(800, 550, msg, (void*)0x0008);
         
-        if (showUnlockMessage) {
+        if (unlockMessageType == 1) { // Dawn
             // Darken background
             iSetColor(0, 0, 0);
             iFilledRectangle(200, 200, 600, 200);
             
             iSetColor(0, 255, 0);
-            iText(350, 320, "New Monster Unlocked!", (void*)0x0006); // Large font
+            iText(320, 320, "New Monster Dawn Unlocked!", (void*)0x0006); // Large font
             
             iSetColor(255, 255, 255);
-            iText(330, 280, "Press SPACE to return to Map", (void*)0x0008);
+            iText(300, 280, "Press SPACE to equip and return to Tower 1", (void*)0x0008);
+        }
+        else if (unlockMessageType == 2) { // Drake
+            iSetColor(0, 0, 0);
+            iFilledRectangle(200, 200, 600, 200);
+            
+            iSetColor(0, 255, 0);
+            iText(320, 320, "New Monster Drake Unlocked!", (void*)0x0006); 
+            
+            iSetColor(255, 255, 255);
+            iText(300, 280, "Press SPACE to equip and return to Tower 3", (void*)0x0008);
+        }
+        else if (unlockMessageType == 3) { // Endgame runner done
+            iSetColor(0, 0, 0);
+            iFilledRectangle(150, 200, 700, 200);
+
+            iSetColor(255, 215, 0);
+            iText(280, 340, "Runner Quest Complete! (10 Crystals)", (void*)0x0006);
+
+            iSetColor(255, 255, 255);
+            iText(250, 290, "Now complete the Memory Game to finish your journey!", (void*)0x0008);
+            iText(320, 265, "Press SPACE to go to the Memory Game", (void*)0x0008);
         }
         
         if (isGameOver) {
@@ -271,11 +309,21 @@ public:
     }
 
     void HandleInput(unsigned char key) {
-        if (showUnlockMessage) {
+        if (unlockMessageType > 0) {
             if (key == ' ') {
-                showUnlockMessage = false;
                 extern int gameState; 
-                gameState = 1; // Return to Map
+                if (unlockMessageType == 1) {
+                    gameState = 6; // Return to Tower 1 
+                    CombatManager::GetInstance().InitCombatWithDawn();
+                } else if (unlockMessageType == 2) {
+                    gameState = 9; // Return to Tower 3 
+                    CombatManager::GetInstance().InitTower3WithDrake();
+                } else if (unlockMessageType == 3) {
+                    // Endgame: signal wildarea.h to jump to memory game
+                    CombatManager::GetInstance().pendingMemoryGame = true;
+                    gameState = 5;
+                }
+                unlockMessageType = 0;
                 Reset(); // Reset runner game for next time
             }
             return;
@@ -303,7 +351,7 @@ private:
         initialized(false), 
         currentCharacter(0), 
         viviUnlocked(false),
-        showUnlockMessage(false),
+        unlockMessageType(0),
         GROUND_Y(173.0f),
         GRAVITY(2000.0f),
         JUMP_FORCE(900.0f),
@@ -356,7 +404,7 @@ private:
     
     int currentCharacter; // 0=Kael, 1=Vivi
     bool viviUnlocked;
-    bool showUnlockMessage; // New flag
+    int unlockMessageType; // 0=None, 1=Dawn, 2=Drake
     
     float moveSpeed;
     float bgX1, bgX2;

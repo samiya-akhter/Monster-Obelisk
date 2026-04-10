@@ -1,3 +1,4 @@
+#define STB_IMAGE_IMPLEMENTATION
 #include "iGraphics.h"
 #include "CombatManager.h" 
 #include "menu.h"
@@ -10,6 +11,7 @@
 #include "RunnerGame.h"
 #include "AdvancedCombatManager.h"
 #include <ctime>
+#include "OpenWorld.h"
 
 void drawPlayPage();
 void drawCreditPage();
@@ -130,14 +132,23 @@ void iDraw()
     }
 
 	else if (gameState == 7) { 
-		AdvancedCombatManager::GetInstance().Update(0.016f);
+		AdvancedCombatManager::GetInstance().Update(deltaTime);
 		AdvancedCombatManager::GetInstance().Render();
 	}
 
 	else if (gameState == 9)
 	{
-		AdvancedCombatManager::GetInstance().Update(deltaTime);
-		AdvancedCombatManager::GetInstance().Render();
+		CombatManager::GetInstance().UpdateCombat(deltaTime);
+		CombatManager::GetInstance().RenderCombat();
+	}
+
+	else if (gameState == 10)
+	{
+		OpenWorldGame::GetInstance().Update(deltaTime);
+		if (OpenWorldGame::GetInstance().CheckForWildAreaTrigger()) {
+			gameState = 5;
+		}
+		OpenWorldGame::GetInstance().Render();
 	}
 }
 
@@ -208,9 +219,6 @@ void iMouse(int button, int state, int mx, int my)
 
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) 
     {
-		
-		
-
 		// Other pages
 		if (gameState == 0)
 			playClick(mx, my);
@@ -227,18 +235,6 @@ void iMouse(int button, int state, int mx, int my)
 
 		if (gameState == 3)
 			settingBackClick(mx, my);
-        // Setting Page Interactions
-       /* if (gameState == 3) {
-
-			settingClick(mx, my);
-        }*/
-
-
-		//shows the story
-/*		if (playState == 1) {
-			storyClick(mx, my, playState,gameState); 
-			return;
-		}*/
 
 		//inside map/playpage
 		if (gameState == 1) {
@@ -255,19 +251,19 @@ void iMouse(int button, int state, int mx, int my)
         if (playState == 1) {
             handleStoryClick(mx, my);
         }
-
-        // Battle Tower / Combat
-        if (gameState == 6) {
-            CombatManager::GetInstance().OnCleanClick(mx, my);
-        }
 	}
 
+    // Battle Tower / Combat: allow any mouse button to trigger OnCleanClick
+    if (state == GLUT_DOWN) {
+        if (gameState == 6 || gameState == 9) {
+            CombatManager::GetInstance().OnCleanClick(mx, my);
+        }
+    }
 
 	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
 	{
 
 	}
-
 
 	
 }
@@ -321,15 +317,15 @@ void fixedUpdate()
 			AdvancedCombatManager::GetInstance().MovePlayer(3);  // Move Right
 		}
 
-		// Basic Attack - key 'W' (Lightning Blast)
-		static bool wKeyReleased = true;
-		if (isKeyPressed('w') || isKeyPressed('W')) {
-			if (wKeyReleased) {
+		// Basic Attack - SPACE (Lightning Blast)
+		static bool adv_spaceReleased = true;
+		if (isKeyPressed(' ')) {
+			if (adv_spaceReleased) {
 				AdvancedCombatManager::GetInstance().PlayerAttack(1);
-				wKeyReleased = false;
+				adv_spaceReleased = false;
 			}
 		} else {
-			wKeyReleased = true;
+			adv_spaceReleased = true;
 		}
 
 		// Thunder Crash - key 'F' (Wave 3+)
@@ -342,25 +338,14 @@ void fixedUpdate()
 		} else {
 			fKeyReleased = true;
 		}
-
-		// Exit level
-		if (isKeyPressed(27)) { // ESC
-			gameState = 1; // Go back to map/menu
-		}
 	}
 
-if (gameState == 9) {
-	if (isKeyPressed('a') || isKeyPressed('A') || isSpecialKeyPressed(GLUT_KEY_LEFT)) AdvancedCombatManager::GetInstance().MovePlayer(-3);
-	if (isKeyPressed('d') || isKeyPressed('D') || isSpecialKeyPressed(GLUT_KEY_RIGHT)) AdvancedCombatManager::GetInstance().MovePlayer(3);
-	if (isKeyPressed(' ')) {
-		AdvancedCombatManager::GetInstance().PlayerAttack();
-	}
-}
+
 
 	// Global movements
 	if (isKeyPressed('w') || isSpecialKeyPressed(GLUT_KEY_UP))
 	{
-		if (gameState == 6) {
+		if (gameState == 6 || gameState == 9) {
 			CombatManager::GetInstance().MovePlayer(0, 3);
 		} else {
 			y++;
@@ -368,7 +353,7 @@ if (gameState == 9) {
 	}
 	if (isKeyPressed('a') || isSpecialKeyPressed(GLUT_KEY_LEFT))
 	{
-		if (gameState == 6) {
+		if (gameState == 6 || gameState == 9) {
 			CombatManager::GetInstance().MovePlayer(-3, 0);
 		} else {
 			x--;
@@ -376,7 +361,7 @@ if (gameState == 9) {
 	}
 	if (isKeyPressed('s') || isSpecialKeyPressed(GLUT_KEY_DOWN))
 	{
-		if (gameState == 6) {
+		if (gameState == 6 || gameState == 9) {
 			CombatManager::GetInstance().MovePlayer(0, -3);
 		} else {
 			y--;
@@ -384,7 +369,7 @@ if (gameState == 9) {
 	}
 	if (isKeyPressed('d') || isSpecialKeyPressed(GLUT_KEY_RIGHT))
 	{
-		if (gameState == 6) {
+		if (gameState == 6 || gameState == 9) {
 			CombatManager::GetInstance().MovePlayer(3, 0);
 		} else {
 			x++;
@@ -394,7 +379,7 @@ if (gameState == 9) {
 	static bool spaceReleased = true; // Debounce flag
     if (isKeyPressed(' ')) {
         if (spaceReleased) {
-            if (gameState == 6) {
+            if (gameState == 6 || gameState == 9) {
                 CombatManager::GetInstance().PlayerAttack(1); // Type 1: Lightning Blast
             }
             if (playState == 1) { // Story Mode
@@ -409,19 +394,92 @@ if (gameState == 9) {
     }
 	
 	if (isKeyPressed('f')) {
-		if (gameState == 6) {
+		if (gameState == 6 || gameState == 9) {
 			CombatManager::GetInstance().PlayerAttack(2); // Type 2: Thunder Crash (Wave 3+)
 		}
 	}
 
-    // Exit Combat with ESC
+    // Global Exit Handling with ESC
+    static bool escReleased = true;
     if (isKeyPressed(27)) { // 27 is ESC key
-        if (gameState == 6) {
-             gameState = 1; // Return to map/play page
+            if (escReleased) {
+            if (gameState == 5) {
+                gameState = 10; // Return to Open World Map
+            } else if (gameState == 6 || gameState == 7 || gameState == 9) {
+                bool canReturn = false;
+                if (gameState == 6 || gameState == 9) {
+                    canReturn = CombatManager::GetInstance().IsVictory();
+                } else if (gameState == 7) {
+                    canReturn = AdvancedCombatManager::GetInstance().IsVictory();
+                }
+                if (canReturn) {
+                    // Mark tower as cleared
+                    CombatManager& cm = CombatManager::GetInstance();
+                    if (gameState == 6)  cm.tower1Cleared = true;
+                    if (gameState == 7)  cm.tower2Cleared = true;
+                    if (gameState == 9)  cm.tower3Cleared = true;
+                    if (cm.tower1Cleared && cm.tower2Cleared && cm.tower3Cleared)
+                        cm.allTowersCleared = true;
+
+                    gameState = 10; // Return to open world map
+                    OpenWorldGame::GetInstance().SetTriggerCooldown(1.5);
+                }
+            } else if (gameState == 10) {
+                gameState = 0;  // Return to main menu
+            }
+            escReleased = false;
         }
+    } else {
+        escReleased = true;
+    }
+
+    // Global Enter Handling for Tower Triggers
+    static bool enterReleased = true;
+    if (isKeyPressed('\r') || isKeyPressed(13)) {
+        if (enterReleased && gameState == 10) {
+            CombatManager& cm = CombatManager::GetInstance();
+
+            // Endgame: houses trigger (all towers cleared, quests not done yet)
+            if (cm.allTowersCleared && !(cm.endgameRunnerDone && cm.endgameMemoryDone)
+                && OpenWorldGame::GetInstance().CheckForHousesTrigger()) {
+                
+                cm.lastTowerPlayed = 4; // Specify Endgame Quest
+
+                wildAreaMode = 0; // Show selection screen
+                gameState = 5;   // Enter wild area in endgame mode
+            }
+            // Tower 3 (Yellow)
+            else if (OpenWorldGame::GetInstance().CheckForBattleTower3Trigger()) {
+                if (cm.lives > 0) {
+                    cm.InitTower3();
+                    gameState = 9; // Tower 3
+                }
+            }
+            // Tower 2 (Green)
+            else if (OpenWorldGame::GetInstance().CheckForBattleTower2Trigger()) {
+                AdvancedCombatManager::GetInstance().Init();
+                gameState = 7; // Tower 2
+            }
+            // Tower 1 (Red Zone)
+            else if (OpenWorldGame::GetInstance().CheckForBattleTower1Trigger()) {
+                if (cm.lives > 0) {
+                    cm.InitCombat();
+                    gameState = 6; // Tower 1
+                }
+            }
+            enterReleased = false;
+        }
+    } else {
+        enterReleased = true;
     }
 }
  
+
+void openWorldAnimTimer() {
+    if (gameState == 10) {
+        OpenWorldGame::GetInstance().UpdateAnimation();
+    }
+}
 
 int main()
 {
@@ -438,6 +496,7 @@ int main()
 
 	iSetTimer(30, updateStory);
 	iSetTimer(800, updatePlayPage);
+	iSetTimer(100, openWorldAnimTimer);
 	srand(time(NULL));
 	shuffleCards(); // Randomize cards at start
 	iSetTimer(20, checkMemoryMatch);
@@ -448,6 +507,7 @@ int main()
 	CombatManager::GetInstance().InitCombat();
     RunnerGame::GetInstance().Init();
 	AdvancedCombatManager::GetInstance().Init();
+	OpenWorldGame::GetInstance().Init();
 
 	iStart();
 	return 0;

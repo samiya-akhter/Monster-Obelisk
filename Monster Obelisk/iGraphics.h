@@ -1,3 +1,6 @@
+#ifndef IGRAPHICS_H
+#define IGRAPHICS_H
+
 //
 //  Original Author: S. M. Shahriar Nirjon
 //
@@ -16,7 +19,7 @@
 #include <math.h>
 #include <windows.h>
 #include "glaux.h"
-# define STB_IMAGE_IMPLEMENTATION
+// # define STB_IMAGE_IMPLEMENTATION
 # include "stb_image.h"
 
 int iScreenHeight, iScreenWidth;
@@ -570,3 +573,5 @@ void iStart()
 
     glutMainLoop();
 }
+
+#endif // IGRAPHICS_H

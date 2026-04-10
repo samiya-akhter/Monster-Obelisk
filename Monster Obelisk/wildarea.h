@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include "CombatManager.h" // Required for RestoreLives()
 #include "RunnerGame.h"    // Required for RunnerGame::GetInstance()
+#include "AdvancedCombatManager.h"
+#include "iGraphics.h"
 
 extern int gameState;
 
@@ -126,9 +128,16 @@ static void drawMemoryGame() {
         iSetColor(150, 0, 200);
         iShowBMP2(0, 0, "Image//fullenergy.bmp",0);
         
-        // Visual confirmation
         iSetColor(0, 255, 0);
-        iText(300, 100, "Victory! Lives Restored.", (void*)0x0005);
+        if (CombatManager::GetInstance().allTowersCleared && CombatManager::GetInstance().endgameRunnerDone) {
+            iText(250, 120, "Quest Complete! Journey awaits!", (void*)0x0005);
+            iSetColor(255, 255, 255);
+            iText(240, 80, "Press BACK to return to the main world map!", (void*)0x0008);
+        } else {
+            iText(300, 120, "Victory! Lives Restored.", (void*)0x0005);
+            iSetColor(255, 255, 255);
+            iText(250, 80, "Press BACK to resume battle with Vivi!", (void*)0x0008);
+        }
     }
     // Loss State
     else if (movesLeft <= 0 && lockBoard == 0) { // Check lockBoard so we don't show loss while last pair is checking
@@ -145,6 +154,13 @@ static void drawMemoryGame() {
 
 static void drawWildArea()
 {
+    // If RunnerGame signals we should jump straight to memory game
+    if (CombatManager::GetInstance().pendingMemoryGame) {
+        CombatManager::GetInstance().pendingMemoryGame = false;
+        shuffleCards();
+        wildAreaMode = 1;
+    }
+
     if (wildAreaMode == 0) {
         drawWildAreaSelection();
     } else {
@@ -173,7 +189,7 @@ static void wildAreaClick(int mx, int my) {
 
         // Back Button (20, 540, 80, 40)
         if (mx >= 20 && mx <= 100 && my >= 540 && my <= 580) {
-            gameState = 1; // Return to Map
+            gameState = 10; // Return to Map
             return;
         }
         
@@ -194,15 +210,40 @@ static void wildAreaClick(int mx, int my) {
     // Back Button Click (Goes back to selection)
     if (mx >= 20 && mx <= 100 && my >= 540 && my <= 580) {
         if (matchesFound == 6) {
-            CombatManager::GetInstance().AddStrengthBonus(10.0f); // Award bonus
-            CombatManager::GetInstance().RestoreLives();          // Restore lives!
+            CombatManager& cm = CombatManager::GetInstance();
+
+            // Endgame final quest: both runner done + memory done
+            if (cm.allTowersCleared && cm.endgameRunnerDone && !cm.endgameMemoryDone && cm.lastTowerPlayed == 4) {
+                cm.endgameMemoryDone = true;
+                restartWildArea();
+                wildAreaMode = 0;
+                gameState = 10; // Return to main outer map!
+                return;
+            }
+
+            // Normal: restore lives and restart tower with Vivi
+            cm.RestoreLives();
+            int tower = cm.lastTowerPlayed;
+            restartWildArea();
+            wildAreaMode = 0;
+            if (tower == 3) {
+                cm.InitTower3();
+                gameState = 9;
+            } else if (tower == 2) {
+                AdvancedCombatManager::GetInstance().Init();
+                gameState = 7;
+            } else if (tower == 1) {
+                cm.InitCombat();
+                gameState = 6;
+            } else if (tower == 4) {
+                gameState = 10;
+            }
+            return;
         }
-        
+
         // Reset Game State for next time
-        restartWildArea(); // Use restart to clean up
-        
-        wildAreaMode = 0; // Back to selection screen
-        // gameState = 1; // OR back to map
+        restartWildArea();
+        wildAreaMode = 0;
         return;
     }
 

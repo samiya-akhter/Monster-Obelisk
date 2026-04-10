@@ -1,6 +1,8 @@
 #ifndef PLAYPAGE_H
 #define PLAYPAGE_H
 #include "AdvancedCombatManager.h"
+#include "OpenWorld.h"
+#include "CombatManager.h"
 extern int playState;
 extern int gameState;
 
@@ -63,14 +65,16 @@ void nextStorySlide() {
     storyFrame++;
     if (storyFrame >= 8) {
         playState = 2; // End story state
-        gameState = 1; // Transition to Map
+        OpenWorldGame::GetInstance().Init();
+        gameState = 10; // Transition to Open World
         storyFrame = 0; // Reset for future use
     }
 }
 
 void skipStory() {
     playState = 2;
-    gameState = 1;
+    OpenWorldGame::GetInstance().Init();
+    gameState = 10;
     storyFrame = 0;
 }
 
@@ -96,20 +100,10 @@ void updatePlayPage()
 }
 
 void mapClick(int mx, int my) {
-	// Coordinates for wild area
-	if (mx >= 100 && mx <= 420 && my >= 310 && my <= 520) {
-		gameState = 5;
-	}
-	// Coordinates for Battle Tower 1
-	if (mx >= 590 && mx <= 660 && my >= 230 && my <= 640) {
-        if (CombatManager::GetInstance().lives > 0) {
-		    gameState = 6;
-        }
-	}
-	// Coordinates for Battle Tower 2 (PLACEHOLDER - adjust to match map)
+	// Coordinates for Right Tower / Open World
 	if (mx >= 790 && mx <= 850 && my >= 220 && my <= 360) {
-		AdvancedCombatManager::GetInstance().Init();
-		gameState = 7;
+		OpenWorldGame::GetInstance().Init();
+		gameState = 10;
 	}
 }
 #endif

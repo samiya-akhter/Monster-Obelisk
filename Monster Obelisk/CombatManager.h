@@ -43,53 +43,124 @@ struct Monster {
 	// Visual
 	float x, y;
 	unsigned int textureID; // Static/Fallback
+	bool facingRight; // Direction flag: true = facing right
 
-	// Animations
+	// Animations (RIGHT-facing for player; LEFT-facing for enemies by default)
 	std::vector<unsigned int> idleFrames;
 	std::vector<unsigned int> walkFrames;
 	std::vector<unsigned int> attack1Frames; // Lightning Blast
 	std::vector<unsigned int> attack2Frames; // Thunder Crash
 
+	// Alternative direction frames
+	// For player: left-facing versions
+	// For enemies: right-facing versions (enemy walking/attacking toward player on their right)
+	std::vector<unsigned int> idleFramesAlt;
+	std::vector<unsigned int> walkFramesAlt;
+	std::vector<unsigned int> attack1FramesAlt;
+	std::vector<unsigned int> attack2FramesAlt;
+
 	int currentFrame;
 	float animTimer;
 	int currentAttackType; // 0=None, 1=LB, 2=TC
 	bool isMoving; // Track movement state
+	float attackTimer; // Unique attack timer per enemy instance
+	int attacksPerformed;
 
-	Monster() : maxHealth(100), currentHealth(100), attackPower(10), x(0), y(0), textureID(0), currentFrame(0), animTimer(0), currentAttackType(0), isMoving(false) {}
+	Monster() : maxHealth(100), currentHealth(100), attackPower(10), x(0), y(0), textureID(0), facingRight(true), currentFrame(0), animTimer(0), currentAttackType(0), isMoving(false), attackTimer(0), attacksPerformed(0) {}
 };
 
 class CombatManager {
 public:
 	int lives;
 	float bonusStrength;
+	bool dawnUnlocked;
+	bool drakeUnlocked;
+	int lastTowerPlayed;
+
+	// Endgame tracking
+	bool tower1Cleared;
+	bool tower2Cleared;
+	bool tower3Cleared;
+	bool allTowersCleared;
+	bool endgameRunnerDone;   // collected 10 crystals after all towers cleared
+	bool endgameMemoryDone;   // completed memory game after all towers cleared
+	bool pendingMemoryGame;   // signal to wildarea.h to jump straight to memory game
 
 	static CombatManager& GetInstance() {
 		static CombatManager instance;
 		return instance;
 	}
 
+	bool IsVictory() const {
+		return currentState == VICTORY;
+	}
+
 	void InitCombat() {
 		currentWave = 1;
 		currentState = COMBAT_START;
+		lastTowerPlayed = 1;
 
 		// Init Player
 		playerMonster.name = "Vivi";
 		playerMonster.textureIdle = "Image//lightning_monster_idle.bmp"; // Fallback
 		playerMonster.textureID = iLoadImage(playerMonster.textureIdle.c_str(), 255, 255, 255);
 
-		// Load Animations for Vivi
-		LoadAnimationFrames(playerMonster.idleFrames, "Image//Vivi//vivo_standing", 16);
-		LoadAnimationFrames(playerMonster.walkFrames, "Image//Vivi//vivi_walk", 25);
-		LoadAnimationFrames(playerMonster.attack1Frames, "Image//Vivi//vivi_lb", 25);
-		LoadAnimationFrames(playerMonster.attack2Frames, "Image//Vivi//vivi_tc", 25);
+		// Load Animations for Vivi (right-facing = default, left-facing = alt)
+		LoadAnimationFrames(playerMonster.idleFrames,     "Image//Monster Images//Player Monsters//Vivi//Vivi Idle Right//vivo_standing", 16);
+		LoadAnimationFrames(playerMonster.walkFrames,     "Image//Monster Images//Player Monsters//Vivi//Vivi Walk Right//vivi_walk", 25);
+		LoadAnimationFrames(playerMonster.attack1Frames,  "Image//Monster Images//Player Monsters//Vivi//Vivi Attack Right//vivi_lb", 25);
+		LoadAnimationFrames(playerMonster.attack2Frames,  "Image//Monster Images//Player Monsters//Vivi//Vivi Special Attack Right//vivi_tc", 25);
+		LoadAnimationFrames(playerMonster.idleFramesAlt,  "Image//Monster Images//Player Monsters//Vivi//Vivi Idle Left//vivo_standing", 16);
+		LoadAnimationFrames(playerMonster.walkFramesAlt,  "Image//Monster Images//Player Monsters//Vivi//Vivi Walk Left//vivi_walk", 25);
+		LoadAnimationFrames(playerMonster.attack1FramesAlt, "Image//Monster Images//Player Monsters//Vivi//Vivi Attack Left//vivi_lb", 25);
+		LoadAnimationFrames(playerMonster.attack2FramesAlt, "Image//Monster Images//Player Monsters//Vivi//Vivi Special Attack Left//vivi_tc", 25);
+		playerMonster.facingRight = true;
 
-		// Load Animations for Enemy (from Tower 2)
-		LoadAnimationFrames(enemyMonster.idleFrames, "Image//black//black_running", 16);
+		// Load Animations for Enemy (Black) — left=default, right=alt
+		LoadAnimationFrames(enemyTemplate.idleFrames,    "Image//Monster Images//Black//Black Walk Left//black_running", 16);
+		LoadAnimationFrames(enemyTemplate.walkFramesAlt, "Image//Monster Images//Black//Black Walk Right//black_running", 16);
+		enemyTemplate.facingRight = false;
+
+		playerMonster.y = PLAYER_START_Y;
+
+		isTower3 = false;
+		bgScrollOffset = 0.0f;
+		backgroundTextureID = iLoadImage("Image//combact_background.bmp");
+		SetupWave(currentWave);
+	}
+
+	void InitTower3() {
+		currentWave = 1;
+		currentState = COMBAT_START;
+		lastTowerPlayed = 3;
+
+		// Init Player
+		playerMonster.name = "Vivi";
+		playerMonster.textureIdle = "Image//lightning_monster_idle.bmp"; // Fallback
+		playerMonster.textureID = iLoadImage(playerMonster.textureIdle.c_str(), 255, 255, 255);
+
+		// Load Animations for Vivi (right-facing = default, left-facing = alt)
+		LoadAnimationFrames(playerMonster.idleFrames,     "Image//Monster Images//Player Monsters//Vivi//Vivi Idle Right//vivo_standing", 16);
+		LoadAnimationFrames(playerMonster.walkFrames,     "Image//Monster Images//Player Monsters//Vivi//Vivi Walk Right//vivi_walk", 25);
+		LoadAnimationFrames(playerMonster.attack1Frames,  "Image//Monster Images//Player Monsters//Vivi//Vivi Attack Right//vivi_lb", 25);
+		LoadAnimationFrames(playerMonster.attack2Frames,  "Image//Monster Images//Player Monsters//Vivi//Vivi Special Attack Right//vivi_tc", 25);
+		LoadAnimationFrames(playerMonster.idleFramesAlt,  "Image//Monster Images//Player Monsters//Vivi//Vivi Idle Left//vivo_standing", 16);
+		LoadAnimationFrames(playerMonster.walkFramesAlt,  "Image//Monster Images//Player Monsters//Vivi//Vivi Walk Left//vivi_walk", 25);
+		LoadAnimationFrames(playerMonster.attack1FramesAlt, "Image//Monster Images//Player Monsters//Vivi//Vivi Attack Left//vivi_lb", 25);
+		LoadAnimationFrames(playerMonster.attack2FramesAlt, "Image//Monster Images//Player Monsters//Vivi//Vivi Special Attack Left//vivi_tc", 25);
+		playerMonster.facingRight = true;
+
+		// Load Animations for Enemy Template (Black) — left=default, right=alt
+		LoadAnimationFrames(enemyTemplate.idleFrames,    "Image//Monster Images//Black//Black Walk Left//black_running", 16);
+		LoadAnimationFrames(enemyTemplate.walkFramesAlt, "Image//Monster Images//Black//Black Walk Right//black_running", 16);
+		enemyTemplate.facingRight = false;
 
 		playerMonster.x = PLAYER_START_X;
 		playerMonster.y = PLAYER_START_Y;
 
-		backgroundTextureID = iLoadImage("Image//combact_background.bmp");
+		isTower3 = true;
+		bgScrollOffset = 0.0f;
+		backgroundTextureID = iLoadImage("Image//combat render3.png");
 		SetupWave(currentWave);
 	}
 
@@ -102,26 +173,161 @@ public:
 		}
 	}
 
-	void SetupWave(int waveIndex) {
-		// Apply strength bonus
-		playerMonster.attackPower = 40.0f + bonusStrength + (20.0f * (waveIndex - 1));
-		playerMonster.maxHealth = 100.0f + (50.0f * (waveIndex - 1));
-		playerMonster.currentHealth = playerMonster.maxHealth;
+	void LoadAnimationFramesZeroIndexed(std::vector<unsigned int>& frames, std::string prefix, int count) {
+		frames.clear();
+		char path[256];
+		for (int i = 0; i < count; i++) {
+			sprintf_s(path, 256, "%s\\frame_%03d.png", prefix.c_str(), i);
+			frames.push_back(iLoadImage(path, 255, 255, 255));
+		}
+	}
 
-		// Reset positions
+	void InitCombatWithDawn() {
+		currentWave = 1;
+		currentState = COMBAT_START;
+		lives = 3; // Restore lives fully!
+		lastTowerPlayed = 1;
+
+		// Init Player as Dawn
+		playerMonster.name = "Dawn";
+		playerMonster.textureIdle = ""; 
+
+		// Load Animations for Dawn (right=default, left=alt)
+		LoadAnimationFramesZeroIndexed(playerMonster.idleFrames,      "Image//Monster Images//Player Monsters//Dawn//Dawn Walk right", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.walkFrames,      "Image//Monster Images//Player Monsters//Dawn//Dawn Walk right", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.attack1Frames,   "Image//Monster Images//Player Monsters//Dawn//Dawn Attack right", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.attack2Frames,   "Image//Monster Images//Player Monsters//Dawn//Dawn Special Attack right", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.idleFramesAlt,   "Image//Monster Images//Player Monsters//Dawn//Dawn Walk left", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.walkFramesAlt,   "Image//Monster Images//Player Monsters//Dawn//Dawn Walk left", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.attack1FramesAlt, "Image//Monster Images//Player Monsters//Dawn//Dawn Attack left", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.attack2FramesAlt, "Image//Monster Images//Player Monsters//Dawn//Dawn Special Attack left", 25);
+		playerMonster.facingRight = true;
+
+		if (!playerMonster.idleFrames.empty()) {
+			playerMonster.textureID = playerMonster.idleFrames[0];
+		}
+
+		// Load Animations for Enemy (Black) — left=default, right=alt
+		LoadAnimationFrames(enemyTemplate.idleFrames,    "Image//Monster Images//Black//Black Walk Left//black_running", 16);
+		LoadAnimationFrames(enemyTemplate.walkFramesAlt, "Image//Monster Images//Black//Black Walk Right//black_running", 16);
+		enemyTemplate.facingRight = false;
+
+		playerMonster.y = PLAYER_START_Y;
+		playerMonster.x = PLAYER_START_X;
+
+		isTower3 = false;
+		bgScrollOffset = 0.0f;
+		backgroundTextureID = iLoadImage("Image//combact_background.bmp");
+		SetupWave(currentWave);
+	}
+
+	void InitTower3WithDrake() {
+		currentWave = 1;
+		currentState = COMBAT_START;
+		lives = 3; // Restore lives fully!
+		lastTowerPlayed = 3;
+
+		// Init Player as Drake
+		playerMonster.name = "Drake";
+		playerMonster.textureIdle = ""; 
+
+		// Load Animations for Drake (right=default, left=alt, uses Fly animation for walk)
+		LoadAnimationFramesZeroIndexed(playerMonster.idleFrames,      "Image//Monster Images//Player Monsters//Drake//Drake Fly right", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.walkFrames,      "Image//Monster Images//Player Monsters//Drake//Drake Fly right", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.attack1Frames,   "Image//Monster Images//Player Monsters//Drake//Drake Attack right", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.attack2Frames,   "Image//Monster Images//Player Monsters//Drake//Drake Special Attack right", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.idleFramesAlt,   "Image//Monster Images//Player Monsters//Drake//Drake Fly left", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.walkFramesAlt,   "Image//Monster Images//Player Monsters//Drake//Drake Fly left", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.attack1FramesAlt, "Image//Monster Images//Player Monsters//Drake//Drake Attack left", 25);
+		LoadAnimationFramesZeroIndexed(playerMonster.attack2FramesAlt, "Image//Monster Images//Player Monsters//Drake//Drake Special Attack left", 25);
+		playerMonster.facingRight = true;
+
+		if (!playerMonster.idleFrames.empty()) {
+			playerMonster.textureID = playerMonster.idleFrames[0];
+		}
+
+		// Load Animations for Enemy (Black) — left=default, right=alt
+		LoadAnimationFrames(enemyTemplate.idleFrames,    "Image//Monster Images//Black//Black Walk Left//black_running", 16);
+		LoadAnimationFrames(enemyTemplate.walkFramesAlt, "Image//Monster Images//Black//Black Walk Right//black_running", 16);
+		enemyTemplate.facingRight = false;
+
 		playerMonster.x = PLAYER_START_X;
 		playerMonster.y = PLAYER_START_Y;
 
-		enemyMonster.name = "Void Creature";
-		enemyMonster.textureIdle = "Image//evil_monster_idle.bmp";
-		enemyMonster.textureID = iLoadImage(enemyMonster.textureIdle.c_str(), 255, 255, 255); // Remove white BG
+		isTower3 = true;
+		bgScrollOffset = 0.0f;
+		backgroundTextureID = iLoadImage("Image//combat render3.png");
+		SetupWave(currentWave);
+	}
 
-		// Scale difficulty - Balanced
-		enemyMonster.maxHealth = 180.0f * waveIndex;
-		enemyMonster.currentHealth = enemyMonster.maxHealth;
-		enemyMonster.attackPower = 8.0f + (5.0f * waveIndex); // Slightly increased attack
-		enemyMonster.x = ENEMY_START_X;
-		enemyMonster.y = ENEMY_START_Y;
+	void SetupWave(int waveIndex) {
+		float towerBonusHP = isTower3 ? 100.0f : 0.0f;
+		float towerBonusAtk = isTower3 ? 40.0f : 0.0f;
+		float dawnBonusAtk = (playerMonster.name == "Dawn") ? 15.0f : 0.0f; // Give Dawn an attack bonus!
+		float drakeBonusAtk = (playerMonster.name == "Drake") ? 30.0f : 0.0f; // Give Drake a larger bonus!
+
+		// Apply strength bonus
+		playerMonster.attackPower = 40.0f + towerBonusAtk + dawnBonusAtk + drakeBonusAtk + bonusStrength + (20.0f * (waveIndex - 1));
+		playerMonster.maxHealth = 100.0f + towerBonusHP + (50.0f * (waveIndex - 1));
+		playerMonster.currentHealth = playerMonster.maxHealth;
+
+		// Reset player position
+		playerMonster.x = PLAYER_START_X;
+		playerMonster.y = PLAYER_START_Y;
+
+		enemyTemplate.name = "Black"; // Default for Tower 1
+		enemyTemplate.textureIdle = ""; 
+
+		if (isTower3) {
+			std::string folderName = "Rift";
+			std::string walkFolderName = "Rift Walking left";
+			if (waveIndex == 2) {
+				folderName = "Rooter";
+				walkFolderName = "Rooter Walking left";
+			} else if (waveIndex == 3) {
+				folderName = "Slyther";
+				walkFolderName = "Slyther Walk left";
+			}
+
+			enemyTemplate.name = folderName;
+
+			std::string prefixWalk  = "Image//Monster Images//" + folderName + "//" + walkFolderName;
+			std::string prefixAtk1  = "Image//Monster Images//" + folderName + "//" + folderName + " Attack left";
+			std::string prefixAtk2  = "Image//Monster Images//" + folderName + "//" + folderName + " Special Attack left";
+			// Right-facing alternatives (enemy facing right when player is to their right)
+			std::string prefixWalkR = "Image//Monster Images//" + folderName + "//" + folderName + " Walk right";
+			// Slyther uses "Walking right" — work-around by checking folderName
+			if (folderName == "Slyther") prefixWalkR = "Image//Monster Images//Slyther//Slyther Walking right";
+			std::string prefixAtk1R = "Image//Monster Images//" + folderName + "//" + folderName + " Attack right";
+			std::string prefixAtk2R = "Image//Monster Images//" + folderName + "//" + folderName + " Special Attack right";
+			LoadAnimationFramesZeroIndexed(enemyTemplate.idleFrames,     prefixWalk,  25);
+			LoadAnimationFramesZeroIndexed(enemyTemplate.attack1Frames,  prefixAtk1,  25);
+			LoadAnimationFramesZeroIndexed(enemyTemplate.attack2Frames,  prefixAtk2,  25);
+			LoadAnimationFramesZeroIndexed(enemyTemplate.idleFramesAlt,  prefixWalkR, 25);
+			LoadAnimationFramesZeroIndexed(enemyTemplate.attack1FramesAlt, prefixAtk1R, 25);
+			LoadAnimationFramesZeroIndexed(enemyTemplate.attack2FramesAlt, prefixAtk2R, 25);
+			enemyTemplate.walkFrames    = enemyTemplate.idleFrames;
+			enemyTemplate.walkFramesAlt = enemyTemplate.idleFramesAlt;
+			enemyTemplate.facingRight = false;
+		} else {
+			// Tower 1: generic Black entity
+			enemyTemplate.name = "Black";
+			LoadAnimationFrames(enemyTemplate.idleFrames,    "Image//Monster Images//Black//Black Walk Left//black_running", 16);
+			LoadAnimationFrames(enemyTemplate.walkFramesAlt, "Image//Monster Images//Black//Black Walk Right//black_running", 16);
+			enemyTemplate.facingRight = false;
+		}
+
+		// Scale difficulty
+		enemyTemplate.maxHealth = 80.0f + (100.0f * waveIndex); // Scaled appropriately
+		enemyTemplate.attackPower = 8.0f + (5.0f * waveIndex);
+
+		if (isTower3) {
+			enemyTemplate.attackPower *= 1.75f; // Increase damage output specifically for Tower 3 (Balanced)
+		}
+
+		activeEnemies.clear();
+		enemiesRemainingToSpawn = isTower3 ? 3 : 1; // Tower 3 gets 3 enemies, Tower 2 gets 1
+		nextEnemySpawnTimer = 0.0f; // Spawn the first enemy immediately
 
 		currentState = PLAYER_TURN;
 		waveMessageTimer = 3.0f; // Show wave message for 3 seconds
@@ -137,11 +343,21 @@ public:
 
 		if (!canMove) return;
 
-		if (!canMove) return;
+		// Update facing direction
+		if (dx > 0) playerMonster.facingRight = true;
+		else if (dx < 0) playerMonster.facingRight = false;
 
 		playerMonster.x += dx;
 		playerMonster.isMoving = true; // Set moving flag
-		// playerMonster.y += dy; // REMOVED: Only X movement allowed
+		
+		if (isTower3) {
+			bgScrollOffset -= dx * 0.4f; // Subtle scroll
+			
+            // Slide enemies relative to camera panning so they stay anchored to the floor
+			for (size_t i = 0; i < activeEnemies.size(); i++) {
+				activeEnemies[i].x -= dx * 0.4f;
+			}
+		}
 
 		// Simple Bounds Check
 		if (playerMonster.x < 0) playerMonster.x = 0;
@@ -177,7 +393,7 @@ public:
 
 		// --- ANIMATION UPDATE ---
 		playerMonster.animTimer += deltaTime;
-		float frameDuration = 0.25f; // Slower animation
+		float frameDuration = 0.05f; // Smoother animation
 
 		if (currentState == PLAYER_ATTACK) {
 			// Attack Animation (Play Once)
@@ -219,67 +435,121 @@ public:
 		}
 
 		// --- Enemy Animation Update ---
-		enemyMonster.animTimer += deltaTime;
-		if (enemyMonster.animTimer >= frameDuration) {
-			enemyMonster.animTimer = 0;
-			enemyMonster.currentFrame++;
-			if (!enemyMonster.idleFrames.empty() && enemyMonster.currentFrame >= (int)enemyMonster.idleFrames.size()) {
-				enemyMonster.currentFrame = 0;
+		for (size_t i = 0; i < activeEnemies.size(); i++) {
+			activeEnemies[i].animTimer += deltaTime;
+			if (activeEnemies[i].animTimer >= frameDuration) {
+				activeEnemies[i].animTimer = 0;
+				activeEnemies[i].currentFrame++;
+
+				if (activeEnemies[i].currentAttackType == 1 && !activeEnemies[i].attack1Frames.empty()) {
+					if (activeEnemies[i].currentFrame >= (int)activeEnemies[i].attack1Frames.size()) {
+						activeEnemies[i].currentAttackType = 0; // return to walk
+						activeEnemies[i].currentFrame = 0;
+					}
+				} else if (activeEnemies[i].currentAttackType == 2 && !activeEnemies[i].attack2Frames.empty()) {
+					if (activeEnemies[i].currentFrame >= (int)activeEnemies[i].attack2Frames.size()) {
+						activeEnemies[i].currentAttackType = 0;
+						activeEnemies[i].currentFrame = 0;
+					}
+				} else {
+					if (!activeEnemies[i].idleFrames.empty() && activeEnemies[i].currentFrame >= (int)activeEnemies[i].idleFrames.size()) {
+						activeEnemies[i].currentFrame = 0;
+					}
+				}
+			}
+		}
+
+		// --- Staggered Spawning ---
+		if (enemiesRemainingToSpawn > 0 && currentState != WAVE_CLEAR && currentState != VICTORY && currentState != DEFEAT) {
+			nextEnemySpawnTimer -= deltaTime;
+			if (nextEnemySpawnTimer <= 0) {
+				Monster newEnemy = enemyTemplate;
+				newEnemy.currentHealth = newEnemy.maxHealth;
+				newEnemy.x = 1000.0f; // Spawn off-screen to the right
+				newEnemy.y = ENEMY_START_Y;
+				newEnemy.attackTimer = (rand() % 100) / 100.0f;
+				activeEnemies.push_back(newEnemy);
+
+				enemiesRemainingToSpawn--;
+				nextEnemySpawnTimer = 4.0f; // 4 seconds between staggered enemy spawns
 			}
 		}
 		// ------------------------
 
 		// WAVE CLEAR LOGIC
 		if (currentState == WAVE_CLEAR) {
+			// Fast forward background (Tower 3 only)
+			if (isTower3) {
+				bgScrollOffset -= 400.0f * deltaTime;
+			}
+			
+			// Take player back to starting position
+			if (playerMonster.x > PLAYER_START_X) {
+				playerMonster.x -= 300.0f * deltaTime; // Move left quickly
+				playerMonster.isMoving = true;        // Play run animation
+				if (playerMonster.x < PLAYER_START_X) {
+					playerMonster.x = PLAYER_START_X;
+				}
+			}
+
 			if (stateTimer > 2.0f) { // Wait 2 seconds before next wave
 				SetupWave(currentWave);
 			}
 			return; // Don't process other logic
 		}
 
-		// Real-time Enemy Attacks
+		// Real-time Enemy Attacks and Vector Removal checks
 		if (currentState != WAVE_CLEAR && currentState != VICTORY && currentState != DEFEAT) {
-			enemyAttackTimer -= deltaTime;
-			float dx = playerMonster.x - enemyMonster.x;
-			float dist = fabs(dx);
+			for (size_t i = 0; i < activeEnemies.size(); i++) {
+				activeEnemies[i].attackTimer -= deltaTime;
+				float dx = playerMonster.x - activeEnemies[i].x;
+				float dist = fabs(dx);
 
-			// If in range and cooldown ready, ATTACK!
-			if (dist < 150.0f && enemyAttackTimer <= 0) {
-				playerMonster.currentHealth -= enemyMonster.attackPower;
-				enemyAttackTimer = 1.5f; // Limit attack speed (1 attack per second)
+				// If in range and cooldown ready, ATTACK!
+				if (dist < 150.0f && activeEnemies[i].attackTimer <= 0) {
+					activeEnemies[i].attacksPerformed++;
+					float damageToDeal = activeEnemies[i].attackPower;
 
-				if (playerMonster.currentHealth <= 0) {
-					playerMonster.currentHealth = 0;
-					currentState = DEFEAT;
+					if (activeEnemies[i].attacksPerformed % 4 == 0) {
+						damageToDeal *= 2.5f; // "significantly more damage"
+						activeEnemies[i].currentAttackType = 2; 
+					} else {
+						damageToDeal *= 0.6f; // "significantly weaker"
+						activeEnemies[i].currentAttackType = 1;
+					}
+					
+					activeEnemies[i].currentFrame = 0; // Reset anim
+					playerMonster.currentHealth -= damageToDeal;
+					activeEnemies[i].attackTimer = 1.5f; // Limit attack speed
+
+					if (playerMonster.currentHealth <= 0) {
+						playerMonster.currentHealth = 0;
+						currentState = DEFEAT;
+						return;
+					}
 				}
 			}
 		}
 
-		// Enemy AI: Move towards player to fight (X tracking only)
-		// Only move during "idle" turns or when waiting to attack
-		if (currentState == PLAYER_TURN || currentState == ENEMY_TURN) {
-			float dx = playerMonster.x - enemyMonster.x;
-			float distance = fabs(dx); // Only X distance matters now
-			const float stopDistance = 150.0f; // Attack range
+		// Enemy AI: Move towards player to fight
+		if (currentState != WAVE_CLEAR && currentState != VICTORY && currentState != DEFEAT) {
+			for (size_t i = 0; i < activeEnemies.size(); i++) {
+				float dx = playerMonster.x - activeEnemies[i].x;
+				float distance = fabs(dx);
+				float stopDistance = 150.0f; // All enemies converge directly to fight, no queueing!
 
-			if (distance > stopDistance) {
-				float speed = 30.0f; // Pixels per second
+				// Update enemy facing direction based on player position
+				activeEnemies[i].facingRight = (playerMonster.x > activeEnemies[i].x);
 
-				// Move towards player
-				if (dx > 0) enemyMonster.x += speed * deltaTime;
-				else enemyMonster.x -= speed * deltaTime;
-			}
-			else {
-				// If close enough and in enemy turn, attack immediately!
-				if (currentState == ENEMY_TURN && stateTimer > 0.5f) { // Added small delay so it doesn't spam instantly
-					currentState = ENEMY_ATTACK;
-					stateTimer = 0;
+				if (distance > stopDistance) {
+					float speed = 40.0f + (i * 20.0f); // Enemies walk at different dynamic speeds
+					if (dx > 0) activeEnemies[i].x += speed * deltaTime;
+					else activeEnemies[i].x -= speed * deltaTime;
 				}
-			}
 
-			// Keep bounds (Y is fixed now)
-			if (enemyMonster.x < 0) enemyMonster.x = 0;
-			if (enemyMonster.x > 800) enemyMonster.x = 800;
+				if (activeEnemies[i].x < 0) activeEnemies[i].x = 0;
+				// Clamping upper bounds removed so monsters can spawn outside screen edge at x=1000 and walk in naturally
+			}
 		}
 
 		switch (currentState) {
@@ -287,28 +557,30 @@ public:
 			break;
 
 		case PLAYER_ATTACK:
-			if (stateTimer > 1.0f) { // Slower attack transition
-				// Check distance for hit
-				float dx = playerMonster.x - enemyMonster.x;
-				float dy = playerMonster.y - enemyMonster.y;
-				float dist = sqrt(dx*dx + dy*dy);
+			if (stateTimer > 0.8f) { // Attack impact moment
+				playerHit = false; // Reset hit flag
 
-				if (dist < 250.0f) { // Range 250 (monsters are 200px wide, so they must be touching/close)
-					float damage = currentAttackDamage;
-					enemyMonster.currentHealth -= damage;
-					playerHit = true; // Visual flag
+				// AoE logic: Check all enemies
+				for (int i = (int)activeEnemies.size() - 1; i >= 0; i--) {
+					float dx = playerMonster.x - activeEnemies[i].x;
+					float dist = fabs(dx);
 
-					if (enemyMonster.currentHealth <= 0) {
-						enemyMonster.currentHealth = 0;
-						EndWave();
-						return; // Stop processing
+					if (dist < 250.0f) { // Range
+						activeEnemies[i].currentHealth -= currentAttackDamage;
+						playerHit = true;
+
+						if (activeEnemies[i].currentHealth <= 0) {
+							activeEnemies.erase(activeEnemies.begin() + i); // Monster disappears!
+						}
 					}
 				}
-				else {
-					playerHit = false; // Miss
+
+				if (activeEnemies.empty() && enemiesRemainingToSpawn <= 0) {
+					EndWave();
+					return; // Stop processing
 				}
 
-				currentState = PLAYER_TURN; // Back to player control immediately (Real-time)
+				currentState = PLAYER_TURN; // Back to player control immediately
 				stateTimer = 0;
 			}
 			break;
@@ -323,29 +595,49 @@ public:
 
 	void RenderCombat() {
 		// Draw Background
-		// Draw Background
-		iShowImage(0, 0, 1000, 600, backgroundTextureID);
+		if (isTower3) {
+			float wrapOffset = fmod(bgScrollOffset, 1100.0f);
+			if (wrapOffset > 0) wrapOffset -= 1100.0f;
+			iShowImage((int)wrapOffset, 0, 1100, 600, backgroundTextureID);
+			iShowImage((int)wrapOffset + 1100, 0, 1100, 600, backgroundTextureID);
+		} else {
+			iShowImage(0, 0, 1000, 600, backgroundTextureID);
+		}
 
-		// Draw Player (Animated)
+		// Draw Player (Animated) — pick direction-appropriate frame set
 		unsigned int tex = playerMonster.textureID;
-		int drawW = 160; // Slightly smaller base to balance with attack
-		int drawH = 160;
+		int drawW = 100;
+		int drawH = 100;
+
+		int drawX = (int)playerMonster.x;
+		int drawY = (int)playerMonster.y;
+
+		// Helper lambdas: choose right or alt (left) frame set based on facingRight
+		std::vector<unsigned int>& pAtk1 = playerMonster.facingRight ? playerMonster.attack1Frames : playerMonster.attack1FramesAlt;
+		std::vector<unsigned int>& pAtk2 = playerMonster.facingRight ? playerMonster.attack2Frames : playerMonster.attack2FramesAlt;
+		std::vector<unsigned int>& pIdle = playerMonster.facingRight ? playerMonster.idleFrames    : playerMonster.idleFramesAlt;
+		std::vector<unsigned int>& pWalk = playerMonster.facingRight ? playerMonster.walkFrames    : playerMonster.walkFramesAlt;
 
 		if (currentState == PLAYER_ATTACK) {
-			drawW = 240; // Increased size to compensate for shrinking content during attack
-			drawH = 240;
-			if (playerMonster.currentAttackType == 1 && !playerMonster.attack1Frames.empty()) {
-				tex = playerMonster.attack1Frames[playerMonster.currentFrame % playerMonster.attack1Frames.size()];
+			if (playerMonster.name == "Vivi" || playerMonster.name == "") {
+				drawW = 150;
+				drawH = 150;
+				drawX -= 25;
+				drawY -= 25;
 			}
-			else if (playerMonster.currentAttackType == 2 && !playerMonster.attack2Frames.empty()) {
-				tex = playerMonster.attack2Frames[playerMonster.currentFrame % playerMonster.attack2Frames.size()];
+
+			if (playerMonster.currentAttackType == 1 && !pAtk1.empty()) {
+				tex = pAtk1[playerMonster.currentFrame % pAtk1.size()];
+			}
+			else if (playerMonster.currentAttackType == 2 && !pAtk2.empty()) {
+				tex = pAtk2[playerMonster.currentFrame % pAtk2.size()];
 			}
 		}
 		else {
 			// Idle/Walk
-			std::vector<unsigned int>* currentAnim = &playerMonster.idleFrames; // Default to idle
-			if (playerMonster.isMoving && !playerMonster.walkFrames.empty()) {
-				currentAnim = &playerMonster.walkFrames;
+			std::vector<unsigned int>* currentAnim = &pIdle;
+			if (playerMonster.isMoving && !pWalk.empty()) {
+				currentAnim = &pWalk;
 			}
 
 			if (!currentAnim->empty()) {
@@ -353,7 +645,7 @@ public:
 			}
 		}
 
-		iShowImage((int)playerMonster.x, (int)playerMonster.y, drawW, drawH, tex);
+		iShowImage(drawX, drawY, drawW, drawH, tex);
 		DrawHealthBar(playerMonster.x + 20, playerMonster.y + 250, playerMonster.currentHealth, playerMonster.maxHealth, 0, 255, 0);
 		// HP Text
 		char hpBuffer[32];
@@ -361,17 +653,40 @@ public:
 		iSetColor(255, 255, 255);
 		iText(playerMonster.x + 20, playerMonster.y + 265, hpBuffer, (void*)0x0008);
 
-		// Draw Enemy (Scaled to 150x150)
-		unsigned int enemyTex = enemyMonster.textureID;
-		if (!enemyMonster.idleFrames.empty()) {
-			enemyTex = enemyMonster.idleFrames[enemyMonster.currentFrame % enemyMonster.idleFrames.size()];
+		// Draw Enemies (Loop through active enemies) — direction-aware
+		for (size_t i = 0; i < activeEnemies.size(); i++) {
+			int ew = 100, eh = 100;
+
+			// Pick left-facing (default) or right-facing (alt) set based on enemy direction
+			std::vector<unsigned int>& eWalk = activeEnemies[i].facingRight ? activeEnemies[i].walkFramesAlt  : activeEnemies[i].idleFrames;
+			std::vector<unsigned int>& eAtk1 = activeEnemies[i].facingRight ? activeEnemies[i].attack1FramesAlt : activeEnemies[i].attack1Frames;
+			std::vector<unsigned int>& eAtk2 = activeEnemies[i].facingRight ? activeEnemies[i].attack2FramesAlt : activeEnemies[i].attack2Frames;
+
+			std::vector<unsigned int>* currentAnim = &eWalk;
+			if (activeEnemies[i].currentAttackType == 1 && !eAtk1.empty()) {
+				currentAnim = &eAtk1;
+			} else if (activeEnemies[i].currentAttackType == 2 && !eAtk2.empty()) {
+				currentAnim = &eAtk2;
+			}
+
+			if (!currentAnim->empty()) {
+				unsigned int eTex = (*currentAnim)[activeEnemies[i].currentFrame % currentAnim->size()];
+				iShowImage((int)activeEnemies[i].x, (int)activeEnemies[i].y, ew, eh, eTex);
+			}
+
+			// Enemy HP bar
+			float barY = activeEnemies[i].y + 200 + (35 * i);
+			DrawHealthBar(activeEnemies[i].x + 20, barY, activeEnemies[i].currentHealth, activeEnemies[i].maxHealth, 255, 0, 0);
+			// HP Text
+			char ehpBuf[32];
+			sprintf_s(ehpBuf, 32, "HP: %d/%d", (int)activeEnemies[i].currentHealth, (int)activeEnemies[i].maxHealth);
+			iSetColor(255, 255, 255);
+			iText(activeEnemies[i].x + 20, barY + 15, ehpBuf, (void*)0x0008);
+			
+			// Simple name identifier
+			iSetColor(255, 100, 100);
+			iText(activeEnemies[i].x + 20, barY - 15, enemyTemplate.name.c_str(), (void*)0x0008);
 		}
-		iShowImage((int)enemyMonster.x, (int)enemyMonster.y, 150, 150, enemyTex);
-		DrawHealthBar(enemyMonster.x + 20, enemyMonster.y + 250, enemyMonster.currentHealth, enemyMonster.maxHealth, 255, 0, 0);
-		// HP Text
-		sprintf_s(hpBuffer, 32, "HP: %d/%d", (int)enemyMonster.currentHealth, (int)enemyMonster.maxHealth);
-		iSetColor(255, 255, 255);
-		iText(enemyMonster.x + 20, enemyMonster.y + 265, hpBuffer, (void*)0x0008);
 
 		// Attack Feedback
 		if (attackFeedbackTimer > 0) {
@@ -403,6 +718,8 @@ public:
 		if (currentState == VICTORY) {
 			iSetColor(255, 215, 0);
 			iText(400, 500, "VICTORY!", (void*)0x0006); // TIMES_ROMAN_24
+			iSetColor(255, 255, 255);
+			iText(320, 450, "Press ESC to return to map", (void*)0x0005);
 		}
 		else if (currentState == DEFEAT) {
 			iSetColor(255, 0, 0);
@@ -415,6 +732,14 @@ public:
 			sprintf_s(statusBuf, 64, "Wave: %d / %d", currentWave, TOTAL_WAVES);
 			iSetColor(255, 255, 255);
 			iText(400, 550, statusBuf, (void*)0x0008);
+		}
+
+		// Controls hint
+		iSetColor(180, 180, 180);
+		if (currentWave < TOTAL_WAVES) {
+			iText(200, 580, "A/D: Move   SPACE: Attack   F: Thunder Crash (Wave 3)   ESC: Exit", (void*)0x0008);
+		} else {
+			iText(200, 580, "A/D: Move   SPACE: Attack   F: Thunder Crash   ESC: Exit", (void*)0x0008);
 		}
 
 		// Draw Lives
@@ -438,7 +763,7 @@ public:
 		lives--;
 		if (lives <= 0) {
 			extern int gameState;
-			gameState = 1; // Kick back to map
+			gameState = 5; // Kick back to wild area selection options
 			// lives = 3; // REMOVED: Do not reset lives automatically
 			return;
 		}
@@ -459,6 +784,16 @@ private:
 	CombatManager() :
 		lives(3),
 		bonusStrength(0),
+		dawnUnlocked(false),
+		drakeUnlocked(false),
+		lastTowerPlayed(1),
+		tower1Cleared(false),
+		tower2Cleared(false),
+		tower3Cleared(false),
+		allTowersCleared(false),
+		endgameRunnerDone(false),
+		endgameMemoryDone(false),
+		pendingMemoryGame(false),
 		TOTAL_WAVES(3),
 		PLAYER_START_X(100),
 		PLAYER_START_Y(50),
@@ -467,7 +802,6 @@ private:
 		backgroundTextureID(0),
 		stateTimer(0),
 		waveMessageTimer(0),
-		enemyAttackTimer(0),
 		attackFeedbackTimer(0),
 		playerHit(false)
 	{
@@ -512,17 +846,21 @@ private:
 	}
 
 	Monster playerMonster;
-	Monster enemyMonster;
+	Monster enemyTemplate;
+	std::vector<Monster> activeEnemies;
 	CombatState currentState;
 	int currentWave;
 	float stateTimer;
 	float waveMessageTimer;
-	float enemyAttackTimer; // Independent attack cooldown
 	float attackFeedbackTimer;
 	std::string currentAttackName;
 	float currentAttackDamage;
 	bool playerHit;
 	unsigned int backgroundTextureID; // Cache background
+	bool isTower3;
+	float bgScrollOffset;
+	int enemiesRemainingToSpawn;
+	float nextEnemySpawnTimer;
 
 	const int TOTAL_WAVES;
 	const float PLAYER_START_X;
