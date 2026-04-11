@@ -85,9 +85,31 @@ public:
 	bool endgameRunnerDone;   // collected 10 crystals after all towers cleared
 	bool endgameMemoryDone;   // completed memory game after all towers cleared
 
+	// Task / Phase tracking
+	bool phase1RewardGiven;
+	bool phase2RewardGiven;
+	bool phase3RewardGiven;
+	int phase2CoinTarget;
+	bool phase2MemoryDone;
+
+	// Tracks if the player was forced here by losing all lives (not voluntary visit)
+	bool sentToWildAreaByLoss;
+
+	// Shop Potions Inventory
+	int healPotionCount;
+	int damagePotionCount;
+	bool damagePotionUsed;
+
 	static CombatManager& GetInstance() {
 		static CombatManager instance;
 		return instance;
+	}
+
+	void HealPlayer(float percentage) {
+		playerMonster.currentHealth += playerMonster.maxHealth * percentage;
+		if (playerMonster.currentHealth > playerMonster.maxHealth) {
+			playerMonster.currentHealth = playerMonster.maxHealth;
+		}
 	}
 
 	bool IsVictory() const {
@@ -95,6 +117,8 @@ public:
 	}
 
 	void InitCombat() {
+		// Reset states for new combat
+		damagePotionUsed = false;
 		currentWave = 1;
 		currentState = COMBAT_START;
 		lastTowerPlayed = 1;
@@ -129,6 +153,8 @@ public:
 	}
 
 	void InitTower3() {
+		// Optional: specific init for Tower 3 if needed
+		damagePotionUsed = false;
 		currentWave = 1;
 		currentState = COMBAT_START;
 		lastTowerPlayed = 3;
@@ -378,6 +404,10 @@ public:
 				currentAttackName = "THUNDER CRASH!";
 				currentAttackDamage = playerMonster.attackPower * 2.0f;
 			}
+
+            if (damagePotionUsed) {
+                currentAttackDamage *= 1.5f;
+            }
 
 			currentState = PLAYER_ATTACK;
 			stateTimer = 0;
@@ -736,10 +766,16 @@ public:
 		// Controls hint
 		iSetColor(180, 180, 180);
 		if (currentWave < TOTAL_WAVES) {
-			iText(200, 580, "A/D: Move   SPACE: Attack   F: Thunder Crash (Wave 3)   ESC: Exit", (void*)0x0008);
+			iText(200, 580, "A/D: Move   W: Attack   F: Thunder Crash (Wave 3)   ESC: Exit", (void*)0x0008);
 		} else {
-			iText(200, 580, "A/D: Move   SPACE: Attack   F: Thunder Crash   ESC: Exit", (void*)0x0008);
+			iText(200, 580, "A/D: Move   W: Attack   F: Thunder Crash   ESC: Exit", (void*)0x0008);
 		}
+
+		// Draw Potion Hotkeys
+		char potText[100];
+		sprintf_s(potText, sizeof(potText), "H: Heal (%d)   X: Damage (%d)", healPotionCount, damagePotionCount);
+		iSetColor(200, 200, 255);
+		iText(200, 560, potText, (void*)0x0008);
 
 		// Draw Lives
 		iSetColor(255, 255, 0);
@@ -762,8 +798,8 @@ public:
 		lives--;
 		if (lives <= 0) {
 			extern int gameState;
+			sentToWildAreaByLoss = true; // Player lost all lives
 			gameState = 5; // Kick back to wild area selection options
-			// lives = 3; // REMOVED: Do not reset lives automatically
 			return;
 		}
 
@@ -773,6 +809,7 @@ public:
 
 	void RestoreLives() {
 		lives = 4;
+		sentToWildAreaByLoss = false; // Cleared after life restoration
 	}
 
 	void AddStrengthBonus(float bonus) {
@@ -792,6 +829,15 @@ private:
 		allTowersCleared(false),
 		endgameRunnerDone(false),
 		endgameMemoryDone(false),
+		phase1RewardGiven(false),
+		phase2RewardGiven(false),
+		phase3RewardGiven(false),
+		phase2CoinTarget(0),
+		phase2MemoryDone(false),
+		sentToWildAreaByLoss(false),
+		healPotionCount(0),
+		damagePotionCount(0),
+		damagePotionUsed(false),
 		TOTAL_WAVES(3),
 		PLAYER_START_X(100),
 		PLAYER_START_Y(50),

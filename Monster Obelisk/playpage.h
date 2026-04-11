@@ -7,10 +7,16 @@
 extern int playState;
 extern int gameState;
 
-char storySlides[8][30] = {"image//story1.bmp", "image//story2.bmp",
-                           "image//story3.bmp", "image//story4.bmp",
-                           "image//story5.bmp", "image//story6.bmp",
-                           "image//story7.bmp", "image//story8.bmp"};
+char storySlides[8][40] = {
+    "Image//story (1).png",
+    "Image//story (2).png",
+    "Image//story (3).png",
+    "Image//story (4).png",
+    "Image//story (5).png",
+    "Image//story (6).png",
+    "Image//story (7).png",
+    "Image//story (8).png"
+};
 
 char map[8][25] = {
 	"image//playpage1.png", "image//playpage2.png",
@@ -29,14 +35,19 @@ void drawPlayPage() {
   if (playState == 1) {
     iShowImage(0, 0, 1000, 600, iLoadImage(storySlides[storyFrame]));
 
-    // Skip Button
-    iSetColor(200, 50, 50);
-    iFilledRectangle(skipX, skipY, skipW, skipH);
-    iSetColor(255, 255, 255);
-    iText(skipX + 30, skipY + 15, "SKIP", (void *)0x0008);
+    if (storyFrame < 7) {
+        // Skip Button
+        iSetColor(0, 0, 0);
+        iFilledRectangle(skipX, skipY, skipW, skipH);
+        iSetColor(255, 255, 255);
+        iText(skipX + 30, skipY + 15, "SKIP", (void *)0x0008);
 
-    // Instruction
-    iText(400, 570, "Press SPACE to Continue", (void *)0x0008);
+        // Instruction
+        iText(300, 565, "Press SPACE to Continue!", (void *)0x0008);
+    } else {
+        iSetColor(255, 255, 0);
+        iText(340, 565, "Press SPACE to Continue!", (void *)0x0008);
+    }
   } else {
     CombatManager& cm = CombatManager::GetInstance();
     if (cm.allTowersCleared && cm.endgameRunnerDone && cm.endgameMemoryDone) {
@@ -57,26 +68,27 @@ void drawPlayPage() {
 }
 
 void nextStorySlide() {
-  storyFrame++;
-  if (storyFrame >= 8) {
+  if (storyFrame >= 7) {
     playState = 2; // End story state
-    OpenWorldGame::GetInstance().Init();
-    gameState = 10; // Transition to Open World
+    extern void InitEishiroConversation();
+    InitEishiroConversation();
+    gameState = 13; // Eishiro conversation override
     storyFrame = 0; // Reset for future use
+  } else {
+    storyFrame++;
   }
 }
 
 void skipStory() {
-  playState = 2;
-  OpenWorldGame::GetInstance().Init();
-  gameState = 10;
-  storyFrame = 0;
+  storyFrame = 7;
 }
 
 void handleStoryClick(int mx, int my) {
-  if (mx >= skipX && mx <= skipX + skipW && my >= skipY &&
-      my <= skipY + skipH) {
-    skipStory();
+  if (storyFrame < 7) {
+    if (mx >= skipX && mx <= skipX + skipW && my >= skipY &&
+        my <= skipY + skipH) {
+      skipStory();
+    }
   }
 }
 
@@ -103,7 +115,7 @@ void mapClick(int mx, int my) {
   if (cm.allTowersCleared && cm.endgameRunnerDone && cm.endgameMemoryDone) {
       // Estimated Top Tower Hitbox (~ x:420-550, y:400-550)
       if (mx >= 420 && mx <= 550 && my >= 400 && my <= 550) {
-          gameState = 11; // Final Boss
+          gameState = 12; // Character Selection
           return;
       }
   }

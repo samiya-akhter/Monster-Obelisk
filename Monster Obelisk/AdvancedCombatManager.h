@@ -39,6 +39,11 @@ public:
 		return instance;
 	}
 
+	void HealPlayer(float percentage) {
+		playerHP += playerMaxHP * percentage;
+		if (playerHP > playerMaxHP) playerHP = playerMaxHP;
+	}
+
 	void Init() {
 		CombatManager::GetInstance().lastTowerPlayed = 2;
 		currentWave         = 0;
@@ -54,6 +59,8 @@ public:
 		playerHit           = false;
 		currentState        = ADV_PLAYER_TURN;
 		isPlayerMoving      = false;
+
+		CombatManager::GetInstance().damagePotionUsed = false;
 
 		bosses.clear();
 		playerWalkFrames.clear();
@@ -112,9 +119,12 @@ public:
 	void SetupWave() {
 		// Scale player stats per wave (Base stats increased for Tower 2)
 		float dawnBonus = CombatManager::GetInstance().dawnUnlocked ? 15.0f : 0.0f;
-		playerMaxHP       = 150.0f + (50.0f * currentWave);
+		float drakeBonus = CombatManager::GetInstance().drakeUnlocked ? 35.0f : 0.0f;
+		float totalBonus = (drakeBonus > 0) ? drakeBonus : dawnBonus;
+
+		playerMaxHP       = 150.0f + (50.0f * currentWave) + (totalBonus * 2.0f);
 		playerHP          = playerMaxHP;
-		playerAttackPower = 60.0f + dawnBonus + (20.0f * currentWave);
+		playerAttackPower = 60.0f + totalBonus + (20.0f * currentWave);
 
 		if (currentWave == 0) enemiesRemainingInWave = 1;
 		else if (currentWave == 1) enemiesRemainingInWave = 2;
@@ -201,9 +211,20 @@ public:
 
 		// Animation cycling
 		animTimer += deltaTime;
-		if (animTimer >= 0.10f) {
+		if (animTimer >= 0.12f) {
 			animTimer = 0;
-			playerFrame++;
+			// During attack, only advance if we haven't passed the full animation
+			if (currentState == ADV_PLAYER_ATTACK) {
+				if (!playerLBFrames.empty() && currentAttackType == 1) {
+					if (playerFrame < (int)playerLBFrames.size() - 1)
+						playerFrame++;
+				} else if (!playerTCFrames.empty() && currentAttackType == 2) {
+					if (playerFrame < (int)playerTCFrames.size() - 1)
+						playerFrame++;
+				}
+			} else {
+				playerFrame++;
+			}
 			isPlayerMoving = false;
 		}
 
@@ -340,6 +361,10 @@ public:
 			currentAttackDamage = playerAttackPower * 2.0f;
 		}
 
+		if (CombatManager::GetInstance().damagePotionUsed) {
+			currentAttackDamage *= 1.5f;
+		}
+
 		currentState        = ADV_PLAYER_ATTACK;
 		stateTimer          = 0;
 		attackFeedbackTimer = 1.0f;
@@ -353,6 +378,9 @@ public:
 		activeEnemies.clear();
 		isTransitioning = true;
 		transitionTimer = 2.5f;
+		currentAttackType = 0; // Reset so walk anim renders, not attack
+		currentState = ADV_PLAYER_TURN; // Allow walk frames to render
+		playerFrame = 0;
 	}
 
 	void Render() {
@@ -381,7 +409,8 @@ public:
 				anim = playerWalk;
 			}
 
-			if (currentState == ADV_PLAYER_ATTACK) {
+			// Only show attack animation when actively in attack state AND attack type is set
+			if (currentState == ADV_PLAYER_ATTACK && currentAttackType != 0 && !isTransitioning) {
 				if (!CombatManager::GetInstance().dawnUnlocked) {
 					drawW = 150; drawH = 150;
 					drawX -= 25; drawY -= 25;
@@ -392,14 +421,18 @@ public:
 				unsigned int tex = (*anim)[playerFrame % anim->size()];
 				iShowImage(drawX, drawY, drawW, drawH, tex);
 			}
-		}
+		} // <-- Missed closing brace for Draw Player scope
 
 		// Player HP bar
 		DrawHealthBar(playerX + 20, 180, playerHP, playerMaxHP, 0, 255, 0);
-		char phpBuf[32];
-		sprintf_s(phpBuf, 32, "HP: %d/%d", (int)playerHP, (int)playerMaxHP);
+		char hud[128];
+		sprintf_s(hud, sizeof(hud), "Wave: %d/3   HP: %d/%d   PWR: %d", currentWave + 1, (int)playerHP, (int)playerMaxHP, (int)playerAttackPower);
 		iSetColor(255, 255, 255);
-		iText(playerX + 20, 200, phpBuf, (void*)0x0008);
+		iText(20, 575, hud, (void*)0x0006);
+
+		sprintf_s(hud, sizeof(hud), "H: Heal (%d)   X: Damage (%d)", CombatManager::GetInstance().healPotionCount, CombatManager::GetInstance().damagePotionCount);
+		iSetColor(200, 200, 255);
+		iText(20, 555, hud, (void*)0x0008);
 
 		// Draw Enemy (animated) — direction-aware
 		if (!isTransitioning) {
@@ -464,7 +497,7 @@ public:
 
 		// Controls hint
 		iSetColor(180, 180, 180);
-		iText(160, 580, "A/D: Move   SPACE: Attack   F: Thunder Crash (Wave 3)   ESC: Exit", (void*)0x0008);
+		iText(160, 580, "A/D: Move   W: Attack   F: Thunder Crash (Wave 3)   ESC: Exit", (void*)0x0008);
 
 		// Victory overlay
 		if (currentState == ADV_VICTORY) {

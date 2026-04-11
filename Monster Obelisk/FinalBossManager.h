@@ -31,14 +31,14 @@ private:
     int playerAttackType; // 0 = idle/sprint, 1 = lb, 2 = tc
     float playerAttackTimer;
 
-    std::vector<unsigned int> viviSprintRight;
-    std::vector<unsigned int> viviSprintLeft;
-    std::vector<unsigned int> viviAttackRight;
-    std::vector<unsigned int> viviAttackLeft;
-    std::vector<unsigned int> viviTCAttackRight;
-    std::vector<unsigned int> viviTCAttackLeft;
-    std::vector<unsigned int> viviJumpRight;
-    std::vector<unsigned int> viviJumpLeft;
+    std::vector<unsigned int> playerSprintRight;
+    std::vector<unsigned int> playerSprintLeft;
+    std::vector<unsigned int> playerAttackRight;
+    std::vector<unsigned int> playerAttackLeft;
+    std::vector<unsigned int> playerTCAttackRight;
+    std::vector<unsigned int> playerTCAttackLeft;
+    std::vector<unsigned int> playerJumpRight;
+    std::vector<unsigned int> playerJumpLeft;
 
     float velocityY;
     bool isJumping;
@@ -106,21 +106,50 @@ private:
 	}
 
 public:
+    std::string currentMonsterName;
+
     static FinalBossManager& GetInstance() {
         static FinalBossManager instance;
         return instance;
     }
 
-    void Init() {
+    void HealPlayer(float percentage) {
+        playerHP += playerMaxHP * percentage;
+        if (playerHP > playerMaxHP) playerHP = playerMaxHP;
+    }
+
+    void Init(std::string monsterName = "Vivi") {
+        currentMonsterName = monsterName;
         backgroundTex = iLoadImage("Image//combat render 4.png");
 
-        // Player: Vivi Sprint and Attack (no idle required per sprint prompt, but we'll use sprint frame 0 for idle)
-        LoadFramesZeroIndexed(viviSprintRight, "Image//Monster Images//Player Monsters//Vivi//Vivi Sprint Right", 25);
-        LoadFramesZeroIndexed(viviSprintLeft, "Image//Monster Images//Player Monsters//Vivi//Vivi Sprint Left", 25);
-        LoadFrames(viviAttackRight, "Image//Monster Images//Player Monsters//Vivi//Vivi Attack Right//vivi_lb", 25);
-        LoadFrames(viviAttackLeft, "Image//Monster Images//Player Monsters//Vivi//Vivi Attack Left//vivi_lb", 25);
-        LoadFrames(viviTCAttackRight, "Image//Monster Images//Player Monsters//Vivi//Vivi Special Attack Right//vivi_tc", 25);
-        LoadFrames(viviTCAttackLeft, "Image//Monster Images//Player Monsters//Vivi//Vivi Special Attack Left//vivi_tc", 25);
+        if (monsterName == "Dawn") {
+            LoadFramesZeroIndexed(playerSprintRight, "Image//Monster Images//Player Monsters//Dawn//Dawn Walk right", 25);
+            LoadFramesZeroIndexed(playerSprintLeft, "Image//Monster Images//Player Monsters//Dawn//Dawn Walk left", 25);
+            LoadFramesZeroIndexed(playerAttackRight, "Image//Monster Images//Player Monsters//Dawn//Dawn Attack right", 25);
+            LoadFramesZeroIndexed(playerAttackLeft, "Image//Monster Images//Player Monsters//Dawn//Dawn Attack left", 25);
+            LoadFramesZeroIndexed(playerTCAttackRight, "Image//Monster Images//Player Monsters//Dawn//Dawn Special Attack right", 25);
+            LoadFramesZeroIndexed(playerTCAttackLeft, "Image//Monster Images//Player Monsters//Dawn//Dawn Special Attack left", 25);
+            LoadFramesZeroIndexed(playerJumpRight, "Image//Monster Images//Player Monsters//Dawn//Dawn Walk right", 25);
+            LoadFramesZeroIndexed(playerJumpLeft, "Image//Monster Images//Player Monsters//Dawn//Dawn Walk left", 25);
+        } else if (monsterName == "Drake") {
+            LoadFramesZeroIndexed(playerSprintRight, "Image//Monster Images//Player Monsters//Drake//Drake Fly right", 25);
+            LoadFramesZeroIndexed(playerSprintLeft, "Image//Monster Images//Player Monsters//Drake//Drake Fly left", 25);
+            LoadFramesZeroIndexed(playerAttackRight, "Image//Monster Images//Player Monsters//Drake//Drake Attack right", 25);
+            LoadFramesZeroIndexed(playerAttackLeft, "Image//Monster Images//Player Monsters//Drake//Drake Attack left", 25);
+            LoadFramesZeroIndexed(playerTCAttackRight, "Image//Monster Images//Player Monsters//Drake//Drake Special Attack right", 25);
+            LoadFramesZeroIndexed(playerTCAttackLeft, "Image//Monster Images//Player Monsters//Drake//Drake Special Attack left", 25);
+            LoadFramesZeroIndexed(playerJumpRight, "Image//Monster Images//Player Monsters//Drake//Drake Fly right", 25);
+            LoadFramesZeroIndexed(playerJumpLeft, "Image//Monster Images//Player Monsters//Drake//Drake Fly left", 25);
+        } else { // Vivi (default)
+            LoadFramesZeroIndexed(playerSprintRight, "Image//Monster Images//Player Monsters//Vivi//Vivi Sprint Right", 25);
+            LoadFramesZeroIndexed(playerSprintLeft, "Image//Monster Images//Player Monsters//Vivi//Vivi Sprint Left", 25);
+            LoadFrames(playerAttackRight, "Image//Monster Images//Player Monsters//Vivi//Vivi Attack Right//vivi_lb", 25);
+            LoadFrames(playerAttackLeft, "Image//Monster Images//Player Monsters//Vivi//Vivi Attack Left//vivi_lb", 25);
+            LoadFrames(playerTCAttackRight, "Image//Monster Images//Player Monsters//Vivi//Vivi Special Attack Right//vivi_tc", 25);
+            LoadFrames(playerTCAttackLeft, "Image//Monster Images//Player Monsters//Vivi//Vivi Special Attack Left//vivi_tc", 25);
+            LoadFramesZeroIndexed(playerJumpRight, "Image//Monster Images//Player Monsters//Vivi//Vivi Jump Right", 25);
+            LoadFramesZeroIndexed(playerJumpLeft, "Image//Monster Images//Player Monsters//Vivi//Vivi Jump Left", 25);
+        }
 
         // Boss: Mogambo - Left and Right
         LoadFramesZeroIndexed(mogamboWalkL, "Image//Monster Images//Mogambo//Mogambo Walk left", 25);
@@ -131,15 +160,13 @@ public:
         LoadFramesZeroIndexed(mogamboSpAtkR, "Image//Monster Images//Mogambo//Mogambo Special Attack right", 25);
         LoadFramesZeroIndexed(mogamboSmashL, "Image//Monster Images//Mogambo//Mogambo Ground Smash Attack left", 25);
         LoadFramesZeroIndexed(mogamboSmashR, "Image//Monster Images//Mogambo//Mogambo Ground Smash Attack right", 25);
-        
-        LoadFramesZeroIndexed(viviJumpRight, "Image//Monster Images//Player Monsters//Vivi//Vivi Jump Right", 25);
-        LoadFramesZeroIndexed(viviJumpLeft, "Image//Monster Images//Player Monsters//Vivi//Vivi Jump Left", 25);
 
         playerHP = 500;
         playerMaxHP = 500; // Large HP pool
         playerX = 100;
         basePlayerY = 50;
         playerY = basePlayerY;
+        CombatManager::GetInstance().damagePotionUsed = false;
         playerFrame = 0;
         playerAttackFrame = 0;
         playerAnimTimer = 0;
@@ -202,7 +229,14 @@ public:
         // Apply Damage if in range
         float dist = fabs(playerX - bossX);
         if (dist <= 300.0f) {
-            float dmg = (type == 1) ? 50.0f : 100.0f;
+            float baseDmg = 50.0f;
+            if (currentMonsterName == "Dawn") baseDmg = 65.0f;
+            else if (currentMonsterName == "Drake") baseDmg = 80.0f;
+
+            float dmg = (type == 1) ? baseDmg : baseDmg * 2.0f;
+            if (CombatManager::GetInstance().damagePotionUsed) {
+                dmg *= 1.5f;
+            }
             bossHP -= dmg;
             if (bossHP <= 0) {
                 bossHP = 0;
@@ -253,7 +287,7 @@ public:
 
         if (playerAttackType != 0) {
             playerAttackTimer -= deltaTime;
-            int maxAtkFrames = playerFacingRight ? viviAttackRight.size() : viviAttackLeft.size();
+            int maxAtkFrames = playerFacingRight ? playerAttackRight.size() : playerAttackLeft.size();
             // Scale attack frame visually
             playerAttackFrame = (int)(( (0.5f - playerAttackTimer) / 0.5f) * maxAtkFrames);
             
@@ -307,12 +341,14 @@ public:
             if (!hasTakenSpecialDamage) {
                 // If the player is on the ground or barely jumping, they get hit!
                 if (playerY <= basePlayerY + 50.0f) {
-                     playerHP -= (playerMaxHP * 0.40f);
-                     hasTakenSpecialDamage = true;
-                     if (playerHP <= 0) {
-                         playerHP = 0;
-                         currentState = FB_DEFEAT;
-                         return;
+                     if (currentMonsterName != "Drake") { // Drake flies and is immune to ground smashes
+                         playerHP -= (playerMaxHP * 0.40f);
+                         hasTakenSpecialDamage = true;
+                         if (playerHP <= 0) {
+                             playerHP = 0;
+                             currentState = FB_DEFEAT;
+                             return;
+                         }
                      }
                 }
             }
@@ -357,8 +393,8 @@ public:
         // Render Player
         int pTex = 0;
         if (playerAttackType > 0) {
-            std::vector<unsigned int>* atk = playerFacingRight ? (playerAttackType == 1 ? &viviAttackRight : &viviTCAttackRight) : 
-                                                                 (playerAttackType == 1 ? &viviAttackLeft : &viviTCAttackLeft);
+            std::vector<unsigned int>* atk = playerFacingRight ? (playerAttackType == 1 ? &playerAttackRight : &playerTCAttackRight) : 
+                                                                 (playerAttackType == 1 ? &playerAttackLeft : &playerTCAttackLeft);
             if (!atk->empty()) {
                 pTex = (*atk)[playerAttackFrame % atk->size()];
             }
@@ -366,9 +402,9 @@ public:
             // Priority: Jump frames over Walk frames
             std::vector<unsigned int>* spr;
             if (isJumping) {
-                 spr = playerFacingRight ? &viviJumpRight : &viviJumpLeft;
+                 spr = playerFacingRight ? &playerJumpRight : &playerJumpLeft;
             } else {
-                 spr = playerFacingRight ? &viviSprintRight : &viviSprintLeft;
+                 spr = playerFacingRight ? &playerSprintRight : &playerSprintLeft;
             }
             if (!spr->empty()) {
                 pTex = (*spr)[playerFrame % spr->size()];

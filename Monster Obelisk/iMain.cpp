@@ -11,8 +11,11 @@
 #include "RunnerGame.h"
 #include "AdvancedCombatManager.h"
 #include "FinalBossManager.h"
+#include "characterselection.h"
 #include <ctime>
 #include "OpenWorld.h"
+#include "EishiroConversation.h"
+#include "shoppage.h"
 
 void drawPlayPage();
 void drawCreditPage();
@@ -120,6 +123,10 @@ void iDraw()
 	{
 		drawWildArea();
 	}
+	else if (gameState == 14)
+	{
+		drawShopMaster();
+	}
 
     else if (gameState == 6)
 	{
@@ -147,15 +154,20 @@ void iDraw()
 	else if (gameState == 10)
 	{
 		OpenWorldGame::GetInstance().Update(deltaTime);
-		if (OpenWorldGame::GetInstance().CheckForWildAreaTrigger()) {
-			gameState = 5;
-		}
 		OpenWorldGame::GetInstance().Render();
 	}
 	else if (gameState == 11)
 	{
 		FinalBossManager::GetInstance().Update(deltaTime);
 		FinalBossManager::GetInstance().Render();
+	}
+	else if (gameState == 12)
+	{
+		drawCharacterSelection();
+	}
+	else if (gameState == 13)
+	{
+		RenderEishiroConversation();
 	}
 }
 
@@ -200,11 +212,11 @@ void iPassiveMouseMove(int mx, int my)
 	{
 		// PLAY hover
 		playHover = (mx >= 398 && mx <= 572 &&
-			my >= 160 && my <= 215);
+			my >= 210 && my <= 265);
 
 		// CREDIT hover
 		creditHover = (mx >= 388 && mx <= 578 &&
-			my >= 80 && my <= 130);
+			my >= 130 && my <= 180);
 
 		// SETTINGS hover
 		settingHover = (mx >= 918 && mx <= 960 &&
@@ -254,9 +266,24 @@ void iMouse(int button, int state, int mx, int my)
 			wildAreaClick(mx, my);
 		}
 
+		// Open World task map click
+		if (gameState == 10)
+		{
+			OpenWorldGame::GetInstance().HandleMouseClick(mx, my);
+		}
+
         // Story Mode Interaction
         if (playState == 1) {
             handleStoryClick(mx, my);
+        }
+
+		// Character Selection
+		if (gameState == 12) {
+			characterSelectionClick(mx, my);
+		}
+        // Shop selection screen hook
+        if (gameState == 14) {
+            iMouseShop(button, state, mx, my);
         }
 	}
 
@@ -291,6 +318,21 @@ void fixedUpdate()
     if (isKeyPressed('r') || isKeyPressed('R')) {
         gameState = 8;
         RunnerGame::GetInstance().Reset();
+    }
+
+    if (gameState == 13) {
+        static bool spaceRelConv = true;
+        if (isKeyPressed(' ')) {
+            if (spaceRelConv) {
+                AdvanceConversation();
+                spaceRelConv = false;
+                if (IsConversationDone()) {
+                    gameState = 10;
+                }
+            }
+        } else {
+            spaceRelConv = true;
+        }
     }
 
     if (gameState == 8) {
@@ -404,6 +446,9 @@ void fixedUpdate()
 	{
 		if (gameState == 6 || gameState == 9) {
 			CombatManager::GetInstance().MovePlayer(0, 3);
+		} else if (gameState == 7) {
+			// W = attack in Tower 2
+			// handled via debounce below
 		} else {
 			y++;
 		}
@@ -433,26 +478,69 @@ void fixedUpdate()
 		}
 	}
 
-	static bool spaceReleased = true; // Debounce flag
-    if (isKeyPressed(' ')) {
-        if (spaceReleased) {
+	static bool wAttackReleased = true;
+    if (isKeyPressed('w') || isKeyPressed('W')) {
+        if (wAttackReleased) {
             if (gameState == 6 || gameState == 9) {
                 CombatManager::GetInstance().PlayerAttack(1); // Type 1: Lightning Blast
             }
+            if (gameState == 7) {
+                AdvancedCombatManager::GetInstance().PlayerAttack(1);
+            }
+            wAttackReleased = false;
+        }
+    } else {
+        wAttackReleased = true;
+    }
+
+	static bool spaceReleased = true; // Debounce flag
+    if (isKeyPressed(' ')) {
+        if (spaceReleased) {
             if (playState == 1) { // Story Mode
                 nextStorySlide();
             }
             spaceReleased = false; // Block until released
         }
-		// Playing the audio once
-		//mciSendString("play ggsong from 0", NULL, 0, NULL);
 	} else {
         spaceReleased = true; // Key released, reset flag
     }
+
+	static bool hReleased = true;
+	if (isKeyPressed('h') || isKeyPressed('H')) {
+		if (hReleased) {
+			CombatManager& cm = CombatManager::GetInstance();
+			if (cm.healPotionCount > 0 && (gameState == 6 || gameState == 7 || gameState == 9 || gameState == 11)) {
+				cm.healPotionCount--;
+                if (gameState == 6 || gameState == 9) {
+				    cm.HealPlayer(0.5f);
+                } else if (gameState == 7) {
+                    AdvancedCombatManager::GetInstance().HealPlayer(0.5f);
+                } else if (gameState == 11) {
+                    FinalBossManager::GetInstance().HealPlayer(0.5f);
+                }
+			}
+			hReleased = false;
+		}
+	} else { hReleased = true; }
+
+	static bool xReleased = true;
+	if (isKeyPressed('x') || isKeyPressed('X')) {
+		if (xReleased) {
+			CombatManager& cm = CombatManager::GetInstance();
+			if (cm.damagePotionCount > 0 && !cm.damagePotionUsed && (gameState == 6 || gameState == 7 || gameState == 9 || gameState == 11)) {
+				cm.damagePotionCount--;
+				cm.damagePotionUsed = true;
+			}
+			xReleased = false;
+		}
+	} else { xReleased = true; }
 	
-	if (isKeyPressed('f')) {
+	if (isKeyPressed('f') || isKeyPressed('F')) {
 		if (gameState == 6 || gameState == 9) {
 			CombatManager::GetInstance().PlayerAttack(2); // Type 2: Thunder Crash (Wave 3+)
+		}
+		if (gameState == 7) {
+			AdvancedCombatManager::GetInstance().PlayerAttack(2); // Thunder Crash in Tower 2
 		}
 	}
 
@@ -462,6 +550,9 @@ void fixedUpdate()
             if (escReleased) {
             if (gameState == 5) {
                 gameState = 10; // Return to Open World Map
+            } else if (gameState == 8) {
+                gameState = 5; // Return to Selection
+                RunnerGame::GetInstance().Reset();
             } else if (gameState == 6 || gameState == 7 || gameState == 9) {
                 bool canReturn = false;
                 if (gameState == 6 || gameState == 9) {
@@ -505,6 +596,11 @@ void fixedUpdate()
                 wildAreaMode = 0; // Show selection screen
                 gameState = 5;   // Enter wild area in endgame mode
             }
+            // Wild Area (Top Right)
+            else if (OpenWorldGame::GetInstance().CheckForWildAreaTrigger()) {
+                wildAreaMode = 0; // Selection screen
+                gameState = 5;
+            }
             // Tower 3 (Yellow)
             else if (OpenWorldGame::GetInstance().CheckForBattleTower3Trigger()) {
                 if (cm.lives > 0) {
@@ -514,8 +610,8 @@ void fixedUpdate()
             }
             // Tower 2 (Green)
             else if (OpenWorldGame::GetInstance().CheckForBattleTower2Trigger()) {
-                AdvancedCombatManager::GetInstance().Init();
-                gameState = 7; // Tower 2
+                shopMenuState = 0;
+                gameState = 14; // Go to selection / shop
             }
             // Tower 1 (Red Zone)
             else if (OpenWorldGame::GetInstance().CheckForBattleTower1Trigger()) {

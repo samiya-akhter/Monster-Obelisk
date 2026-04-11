@@ -6,10 +6,7 @@
 #include <cmath>
 #include <ctime>
 #include <cstdlib>
-#include "CombatManager.h"
-
-//int GROUND_Y = 175;
-
+#include "CombatManager.h" // Needed for the old win conditions!
 
 // Forward declarations for iGraphics functions
 extern void iShowImage(int x, int y, int width, int height, unsigned int texture);
@@ -21,293 +18,419 @@ extern unsigned int iLoadImage(const char* filename);
 
 // Entity Structure
 struct RunnerEntity {
-    float x, y;
-    int width, height;
-    unsigned int textureID;
-    bool active;
-    int type; // 0=Stone, 1=Monster, 2=Crystal
-    
-    RunnerEntity(float _x, float _y, int _w, int _h, unsigned int _tex, int _type) 
-        : x(_x), y(_y), width(_w), height(_h), textureID(_tex), active(true), type(_type) {}
+	float x, y;
+	int width, height;
+	unsigned int textureID;
+	bool active;
+	int type; // 0=Stone/Monster, 1=Monster, 2=Crystal (Coin)
+
+	RunnerEntity(float _x, float _y, int _w, int _h, unsigned int _tex, int _type)
+		: x(_x), y(_y), width(_w), height(_h), textureID(_tex), active(true), type(_type) {}
+};
+
+// Platform Structure
+struct Platform {
+	float x, y, w, h;
+	Platform(float _x, float _y, float _w, float _h) : x(_x), y(_y), w(_w), h(_h) {}
 };
 
 class RunnerGame {
 public:
-    static RunnerGame& GetInstance() {
-        static RunnerGame instance;
-        return instance;
-    }
+	static RunnerGame& GetInstance() {
+		static RunnerGame instance;
+		return instance;
+	}
 
-    void Init() {
-        if (initialized) return;
+	void Init() {
+		if (initialized) return;
 
-        // Load Kael Animations
-        LoadAnimationFrames(kaelRunTextures, "Image//Kael//Kael_running", 16);
-        LoadAnimationFrames(kaelJumpTextures, "Image//Kael//Kael_jumping", 16);
-        
-        // Load Vivi Animations (Unlockable)
-        LoadAnimationFrames(viviRunTextures, "Image//Monster Images//Player Monsters//Vivi//Vivi Walk Right//vivi_walk", 25);
-        
-        // Load Environment
-        bgLayers[0] = iLoadImage("Image//side_quest (1).png");
-        bgLayers[1] = iLoadImage("Image//side_quest (2).png");
-        
-        // obstacles
-        lavaStoneTex = iLoadImage("Image//obstacle//lava stone.png"); // Remove white background
-        monsterTex = iLoadImage("Image//Monster Images//Black//Black Walk Left//black_running (1).png"); // Black bg removal if BMP? Or wait, usually white or specific color. 
-        // Based on other code, 255,255,255 might be transparent color. Let's try 255,255,255.
-        // Re-loading monster with transparency if needed. 
-        // Actually iLoadImage without args doesn't key out color. 
-        // Let's assume transparent PNGs for lava stone.
-        // Monster is BMP. Code uses 255,255,255 in CombatManager. 
-        monsterTex = iLoadImage("Image//Monster Images//Black//Black Walk Left//black_running (1).png"); 
+		// Load Kael Animations
+		LoadAnimationFrames(kaelRunTextures, "Image//Kael//Kael_running", 16);
+		LoadAnimationFrames(kaelJumpTextures, "Image//Kael//Kael_jumping", 16);
 
-        // Crystals
-        crystalTex = iLoadImage("Image//obstacle//red crystal.png");
+		// Load Vivi Animations (Unlockable)
+        // Note: Maintaining original path from current game for Vivi:
+		LoadAnimationFrames(viviRunTextures, "Image//Monster Images//Player Monsters//Vivi//Vivi Walk Right//vivi_walk", 25);
 
-        Reset();
-        initialized = true;
-    }
+		// Load Environment
+		bgLayers[0] = iLoadImage("Image//runner_bg.png");
+		bgLayers[1] = iLoadImage("Image//runner_bg.png");
 
-    void LoadAnimationFrames(std::vector<unsigned int>& frames, std::string prefix, int count) {
-        frames.clear();
-        char path[256];
-        for (int i = 1; i <= count; i++) {
-            sprintf_s(path, 256, "%s (%d).png", prefix.c_str(), i);
-            frames.push_back(iLoadImage(path));
-        }
-    }
+		// obstacles
+		LoadZeroPaddedAnimationFrames(monsterTextures, "Image//black_monster obstacle//frame_", 36);
 
-    void UnloadResources() {
-        // Optional: clear textures if needed
-    }
+		// Crystals / Coins
+		LoadAnimationFrames(coinTextures, "Image//coin//coin", 4);
 
-    void Reset() {
-        playerX = 100;
-        playerY = GROUND_Y;
-		//playerY = 123;
-        velocityY = 0;
-        isJumping = false;
-        isGameOver = false;
-        unlockMessageType = 0; // Reset message flag
-        score = 0;
-        coins = 0;
-        entities.clear();
-        spawnTimer = 0;
-        
-        bgX1 = 0;
-        bgX2 = 1000; // Screen width
-        
-        currentFrame = 0;
-        animTimer = 0;
-        
-        moveSpeed = 400.0f; // Start speed
-    }
+		Reset();
+		initialized = true;
+	}
 
-    void Update(float deltaTime) {
-        if (isGameOver) return;
-        if (unlockMessageType > 0) return; // Pause game for message
+	void LoadAnimationFrames(std::vector<unsigned int>& frames, std::string prefix, int count) {
+		frames.clear();
+		char path[256];
+		for (int i = 1; i <= count; i++) {
+			sprintf_s(path, 256, "%s (%d).png", prefix.c_str(), i);
+			frames.push_back(iLoadImage(path));
+		}
+	}
 
-        // --- Player Physics ---
-        if (isJumping) {
-            playerY += velocityY * deltaTime;
-            velocityY -= GRAVITY * deltaTime;
-            
-            if (playerY <= GROUND_Y) {
-                playerY = GROUND_Y;
-                isJumping = false;
-                velocityY = 0;
-            }
-        }
+	void LoadZeroPaddedAnimationFrames(std::vector<unsigned int>& frames, std::string prefix, int count) {
+		frames.clear();
+		char path[256];
+		for (int i = 0; i < count; i++) {
+			sprintf_s(path, 256, "%s%03d.png", prefix.c_str(), i);
+			frames.push_back(iLoadImage(path));
+		}
+	}
 
-        // --- Background Scrolling ---
-        float bgSpeed = moveSpeed; // Sync with obstacles as requested
-        bgX1 -= bgSpeed * deltaTime;
-        bgX2 -= bgSpeed * deltaTime;
-        
-        if (bgX1 <= -1000) bgX1 = bgX2 + 1000 - 5; // Overlap slightly to prevent gaps
-        if (bgX2 <= -1000) bgX2 = bgX1 + 1000 - 5;
+	void UnloadResources() {
+	}
 
-        // --- Entity Spawning ---
-        spawnTimer -= deltaTime;
-        if (spawnTimer <= 0) {
-            SpawnEntity();
-            spawnTimer = 1.5f + (rand() % 100) / 100.0f; // Random 1.5-2.5s
-            // Decrease spawn timer as speed increases?
-        }
+	void Reset() {
+		playerX = 100;
+		playerY = 173;
+		velocityY = 0;
+		isJumping = false;
+		isGameOver = false;
+		unlockMessageType = 0; // FROM OLD GAME
+		score = 0;
+		coins = 0;
+		entities.clear();
 
-        // --- Entity Movement & Collision ---
-        for (int i = 0; i < (int)entities.size(); i++) {
-            if (!entities[i].active) continue;
+		bgX1 = 0;
+		bgX2 = 1000;
 
-            entities[i].x -= moveSpeed * deltaTime;
+		currentFrame = 0;
+		animTimer = 0;
 
-            // Cleanup off-screen
-            if (entities[i].x + entities[i].width < 0) {
-                entities[i].active = false;
-            }
+		moveSpeed = 400.0f;
 
-            // Collision
-            // Simple AABB
-            // Player Box: (playerX + 20, playerY, 60, 80) - shrink hit box slightly
-            float pBoxX = playerX + 30;
-            float pBoxY = playerY;
-            float pBoxW = 40;
-            float pBoxH = 80;
+		platforms.clear();
+		// Start with a safe solid platform
+		platforms.push_back(Platform(0, 173, 2000, 173));
+		nextPlatformX = 2000;
+	}
 
-            float eBoxX = entities[i].x + 10;
-            float eBoxY = entities[i].y + 10;
-            float eBoxW = entities[i].width - 20;
-            float eBoxH = entities[i].height - 20;
+	void Update(float deltaTime) {
+		if (isGameOver) return;
+		if (unlockMessageType > 0) return;
 
-            if (pBoxX < eBoxX + eBoxW &&
-                pBoxX + pBoxW > eBoxX &&
-                pBoxY < eBoxY + eBoxH &&
-                pBoxY + pBoxH > eBoxY) {
-                
-                if (entities[i].type == 2) { // Crystal
-                    coins++;
-                    entities[i].active = false;
+		// --- Background Scrolling ---
+		float bgSpeed = moveSpeed;
+		bgX1 -= bgSpeed * deltaTime;
+		bgX2 -= bgSpeed * deltaTime;
+
+		if (bgX1 <= -1000) bgX1 = bgX2 + 1000 - 5;
+		if (bgX2 <= -1000) bgX2 = bgX1 + 1000 - 5;
+
+		// --- Platform Management ---
+		for (int i = 0; i < (int)platforms.size(); i++) {
+			platforms[i].x -= moveSpeed * deltaTime;
+		}
+		nextPlatformX -= moveSpeed * deltaTime;
+
+		// Remove off-screen platforms
+		if (!platforms.empty() && platforms[0].x + platforms[0].w < -500) {
+			platforms.erase(platforms.begin());
+		}
+
+		// Spawn new platforms continuously
+		if (nextPlatformX < 1200) {
+			SpawnPlatform();
+		}
+
+		// --- Player Physics ---
+		playerY += velocityY * deltaTime;
+
+		if (isJumping || velocityY != 0) {
+			velocityY -= GRAVITY * deltaTime;
+		}
+
+		bool onGround = false;
+		float px = playerX + 50;
+
+		for (int i = 0; i < (int)platforms.size(); i++) {
+			Platform& p = platforms[i];
+			if (px > p.x && px < p.x + p.w) {
+				// Ground collision if falling
+				if (velocityY <= 0) {
+					float oldPy = playerY - velocityY * deltaTime;
+					if (oldPy >= p.y - 15 && playerY <= p.y + 15) {
+						playerY = p.y;
+						velocityY = 0;
+						isJumping = false;
+						onGround = true;
+						break;
+					}
+				}
+				else if (!isJumping) {
+					// Sticking to flat ground nicely
+					if (abs(playerY - p.y) < 20) {
+						playerY = p.y;
+						onGround = true;
+						break;
+					}
+				}
+			}
+		}
+
+		// Apply falling if stepped off a platform
+		if (!onGround) {
+			isJumping = true;
+			if (velocityY == 0) velocityY = -1; // Force descend
+		}
+
+		// Hole detection: Game over if falling down below screen
+		if (playerY < -150) {
+			isGameOver = true;
+		}
+
+		// --- Entity Movement & Collision ---
+		for (int i = 0; i < (int)entities.size(); i++) {
+			if (!entities[i].active) continue;
+
+			entities[i].x -= moveSpeed * deltaTime;
+
+			if (entities[i].x + entities[i].width < -100) {
+				entities[i].active = false;
+			}
+
+			// Forgiving, core-centered player collision box
+			float pBoxX = playerX + 45;
+			float pBoxY = playerY + 10;
+			float pBoxW = 10;
+			float pBoxH = 60;
+
+			float eBoxX = entities[i].x + 10;
+			float eBoxY = entities[i].y + 10;
+			float eBoxW = entities[i].width - 20;
+			float eBoxH = entities[i].height - 20;
+
+			// For obstacles, make the fatal box even more forgiving
+			if (entities[i].type == 0) {
+				eBoxX = entities[i].x + 35;
+				eBoxW = entities[i].width - 70;
+				eBoxH = entities[i].height - 40;
+			}
+
+			if (pBoxX < eBoxX + eBoxW &&
+				pBoxX + pBoxW > eBoxX &&
+				pBoxY < eBoxY + eBoxH &&
+				pBoxY + pBoxH > eBoxY) {
+
+				if (entities[i].type == 2) { // Coin
+					coins++;
+					accumulatedCoins++;
+					entities[i].active = false;
                     
                     int currentTower = CombatManager::GetInstance().lastTowerPlayed;
+                    bool isProgression = (CombatManager::GetInstance().lives <= 0); // Only works if lives lost
                     
-                    if (currentTower == 1 && coins >= 5) {
-                         if (!CombatManager::GetInstance().dawnUnlocked) {
-                             CombatManager::GetInstance().dawnUnlocked = true;
-                             unlockMessageType = 1; // Trigger Dawn unlock
-                         }
-                    } else if (currentTower == 3 && coins >= 10) {
-                         if (!CombatManager::GetInstance().drakeUnlocked) {
-                             CombatManager::GetInstance().drakeUnlocked = true;
-                             unlockMessageType = 2; // Trigger Drake unlock
-                         }
+                    if (isProgression) {
+                        if (currentTower == 1 && coins >= 5) {
+                             if (!CombatManager::GetInstance().dawnUnlocked) {
+                                 CombatManager::GetInstance().dawnUnlocked = true;
+                                 unlockMessageType = 1; // Trigger Dawn unlock
+                             }
+                        } else if (currentTower == 3 && coins >= 10) {
+                             if (!CombatManager::GetInstance().drakeUnlocked) {
+                                 CombatManager::GetInstance().drakeUnlocked = true;
+                                 unlockMessageType = 2; // Trigger Drake unlock
+                             }
+                        }
                     }
-                    // Endgame: all towers cleared, need 10 crystals
+
+                    // Endgame explicitly flags `lastTowerPlayed = 4`
                     if (CombatManager::GetInstance().allTowersCleared
                         && !CombatManager::GetInstance().endgameRunnerDone
+                        && currentTower == 4
                         && coins >= 10) {
                         CombatManager::GetInstance().endgameRunnerDone = true;
                         unlockMessageType = 3; // Trigger endgame runner completion
                     }
-                } else { // Obstacle
-                    isGameOver = true;
-                }
-            }
-        }
-        
-        // Remove inactive
-        // (Optional: Implement cleanup)
+				}
+				else { // Obstacle
+					isGameOver = true;
+				}
+			}
+		}
 
-        // --- Animation ---
-        animTimer += deltaTime;
-        if (animTimer >= 0.15f) {
-            animTimer = 0;
-            currentFrame++;
-        }
-        
-        // Increase difficulty
-        moveSpeed += 5 * deltaTime; // Slowly speed up
-    }
+		// --- Animation ---
+		animTimer += deltaTime;
+		if (animTimer >= 0.08f) {
+			animTimer = 0;
+			currentFrame++;
+		}
 
-    void SpawnEntity() {
-        int r = rand() % 100;
-        float spawnX = 1050;
-        
-        if (r < 60) { // 60% Crystal
-            // Spawn Crystal (sometimes high, sometimes low)
-            float y = GROUND_Y + (rand() % 2) * 100.0f + 20; // 120 or 220
-            entities.push_back(RunnerEntity(spawnX, y, 40, 40, crystalTex, 2));
-        } 
-        else { // Remaining 40% Lava Stone
-            entities.push_back(RunnerEntity(spawnX, GROUND_Y, 70, 70, lavaStoneTex, 0));
-        }
-    }
+		// Endless difficulty scaling
+		moveSpeed += 5 * deltaTime;
+	}
 
-    void Render() {
-        // Draw Background
-        iShowImage((int)bgX1, 0, 1000, 600, bgLayers[0]);
-        iShowImage((int)bgX2, 0, 1000, 600, bgLayers[1]); // Using bg2 as second part
+	void SpawnPlatform() {
+		int r = rand() % 100;
 
-        // Draw Player
-        // Current Texture
-        unsigned int tex;
-        std::vector<unsigned int>* currentAnim;
-        
-        // Choose character
-        if (currentCharacter == 0) { // Kael
-            if (isJumping) currentAnim = &kaelJumpTextures;
-            else currentAnim = &kaelRunTextures;
-        } else { // Vivi
-             currentAnim = &viviRunTextures; // Only walk/run for Vivi
-        }
-        
-        if (!currentAnim->empty()) {
-            tex = (*currentAnim)[currentFrame % currentAnim->size()];
-            iShowImage((int)playerX, (int)playerY, 100, 100, tex);
-        }
+		float pWidth = 300 + rand() % 500;
+		float pTopY = 173;
+		float pHeight = 173; // solid to floor
+		float pX = nextPlatformX;
 
-        // Draw Entities
-        for (int i = 0; i < (int)entities.size(); i++) {
-            if (entities[i].active) {
-                if (entities[i].type == 1) { // Monster
-                    // Maybe animate monster? using static tex for now
-                     iShowImage((int)entities[i].x, (int)entities[i].y, entities[i].width, entities[i].height, entities[i].textureID);
-                } else {
-                     iShowImage((int)entities[i].x, (int)entities[i].y, entities[i].width, entities[i].height, entities[i].textureID);
-                }
-            }
-        }
+		if (r < 25) {
+			// Hole (gap in path)
+			pX += 150 + rand() % 200;
+		}
+		else if (r < 55) {
+			// Elevated platform (path over actual path)
+			pTopY = 173 + 100 + rand() % 60;
+			pWidth = 200 + rand() % 350;
+			pHeight = 35; // Hovering path
+			pX += 80 + rand() % 120;
 
-        // UI
-        char msg[128];
-        sprintf_s(msg, 128, "Crystals: %d", coins);
-        iSetColor(255, 215, 0); // Gold
-        iText(800, 550, msg, (void*)0x0008);
-        
+			// Random chance to also have ground directly below 
+			// the elevated platform
+			if (rand() % 100 < 50) {
+				platforms.push_back(Platform(pX - 50, 173, pWidth + 100, 173));
+			}
+		}
+		else {
+			// Normal ground platform with occasionally small gaps
+			if (rand() % 100 < 20) pX += 80 + rand() % 80;
+		}
+
+		platforms.push_back(Platform(pX, pTopY, pWidth, pHeight));
+
+		SpawnOnPlatform(pX, pTopY, pWidth);
+
+		float highestX = pX + pWidth;
+		if (highestX > nextPlatformX) {
+			nextPlatformX = highestX;
+		}
+	}
+
+	void SpawnOnPlatform(float pX, float pTopY, float pWidth) {
+		if (pWidth < 180) return;
+
+		int r = rand() % 100;
+		if (r < 50) {
+			// Spawn Coins
+			int numCoins = 1 + rand() % 3;
+			for (int i = 0; i < numCoins; ++i) {
+				float cX = pX + (pWidth / (numCoins + 1)) * (i + 1);
+				float cY = pTopY + 20 + rand() % 40;
+				entities.push_back(RunnerEntity(cX, cY, 40, 40, crystalTex, 2));
+			}
+		}
+		else if (r < 80) {
+			// Spawn Obstacle
+			float oX = pX + pWidth / 2 - 50;
+			entities.push_back(RunnerEntity(oX, pTopY, 100, 100, 0, 0));
+
+			// Sometimes put a coin floating over an obstacle to encourage jumping
+			if (rand() % 100 < 50) {
+				entities.push_back(RunnerEntity(oX, pTopY + 140, 40, 40, crystalTex, 2));
+			}
+		}
+	}
+
+	void Render() {
+		// Draw Background
+		iShowImage((int)bgX1, 0, 1000, 600, bgLayers[0]);
+		iShowImage((int)bgX2, 0, 1000, 600, bgLayers[1]);
+
+		// Draw Black Paths (Platforms)
+		iSetColor(0, 0, 0);
+		for (int i = 0; i < (int)platforms.size(); i++) {
+			iFilledRectangle(platforms[i].x, platforms[i].y - platforms[i].h, platforms[i].w, platforms[i].h);
+		}
+
+		// Draw Player
+		unsigned int tex;
+		std::vector<unsigned int>* currentAnim;
+
+		if (currentCharacter == 0) { // Kael
+			if (isJumping) currentAnim = &kaelJumpTextures;
+			else currentAnim = &kaelRunTextures;
+		}
+		else { // Vivi
+			currentAnim = &viviRunTextures;
+		}
+
+		if (!currentAnim->empty()) {
+			tex = (*currentAnim)[currentFrame % currentAnim->size()];
+			if (isJumping && currentCharacter == 0) {
+				iShowImage((int)playerX - 7, (int)playerY, 115, 115, tex);
+			}
+			else {
+				iShowImage((int)playerX, (int)playerY, 100, 100, tex);
+			}
+		}
+
+		// Draw Entities
+		for (int i = 0; i < (int)entities.size(); i++) {
+			if (entities[i].active) {
+				unsigned int drawTex = entities[i].textureID;
+				if (entities[i].type == 2 && !coinTextures.empty()) {
+					drawTex = coinTextures[currentFrame % coinTextures.size()];
+				}
+				else if (entities[i].type == 0 && !monsterTextures.empty()) {
+					drawTex = monsterTextures[currentFrame % monsterTextures.size()];
+				}
+
+				if (drawTex != 0) {
+					iShowImage((int)entities[i].x, (int)entities[i].y, entities[i].width, entities[i].height, drawTex);
+				}
+				else if (entities[i].type == 0) {
+					// Fallback to red rectangle if texture is missing
+					iSetColor(255, 50, 50);
+					iFilledRectangle((int)entities[i].x, (int)entities[i].y, entities[i].width, entities[i].height);
+				}
+			}
+		}
+
+		// UI FROM OLD GAME
+		char msg[128];
+		sprintf_s(msg, 128, "Run Coins: %d | Total: %d", coins, accumulatedCoins);
+		iSetColor(255, 215, 0); // Gold
+		iText(740, 550, msg, (void*)0x0008);
+
         if (unlockMessageType == 1) { // Dawn
-            // Darken background
             iSetColor(0, 0, 0);
             iFilledRectangle(200, 200, 600, 200);
-            
             iSetColor(0, 255, 0);
-            iText(320, 320, "New Monster Dawn Unlocked!", (void*)0x0006); // Large font
-            
+            iText(320, 320, "New Monster Dawn Unlocked!", (void*)0x0006); 
             iSetColor(255, 255, 255);
             iText(300, 280, "Press SPACE to equip and return to Tower 1", (void*)0x0008);
         }
         else if (unlockMessageType == 2) { // Drake
             iSetColor(0, 0, 0);
             iFilledRectangle(200, 200, 600, 200);
-            
             iSetColor(0, 255, 0);
             iText(320, 320, "New Monster Drake Unlocked!", (void*)0x0006); 
-            
             iSetColor(255, 255, 255);
             iText(300, 280, "Press SPACE to equip and return to Tower 3", (void*)0x0008);
         }
         else if (unlockMessageType == 3) { // Endgame runner done
             iSetColor(0, 0, 0);
             iFilledRectangle(150, 200, 700, 200);
-
             iSetColor(255, 215, 0);
             iText(280, 340, "Runner Quest Complete! (10 Crystals)", (void*)0x0006);
-
             iSetColor(255, 255, 255);
             iText(250, 290, "Now complete the Memory Game to finish your journey!", (void*)0x0008);
             iText(320, 265, "Press SPACE to go to the Memory Game", (void*)0x0008);
         }
-        
-        if (isGameOver) {
-            iSetColor(0, 0, 0);
-            iFilledRectangle(300, 250, 400, 100);
-            iSetColor(255, 0, 0);
-            iText(420, 300, "GAME OVER", (void*)0x0006); // Large font
-            iSetColor(255, 255, 255);
-            iText(380, 270, "Press SPACE to Restart", (void*)0x0008);
-        }
-    }
 
-    void HandleInput(unsigned char key) {
+		if (isGameOver) {
+			iSetColor(0, 0, 0);
+			iFilledRectangle(300, 250, 400, 100);
+			iSetColor(255, 0, 0);
+			iText(420, 300, "GAME OVER", (void*)0x0006);
+			iSetColor(255, 255, 255);
+			iText(380, 270, "Press SPACE to Restart", (void*)0x0008);
+		}
+	}
+
+	void HandleInput(unsigned char key) {
+        // OLD GAME HANDLE INPUT FOR WIN STATES
         if (unlockMessageType > 0) {
             if (key == ' ') {
                 extern int gameState; 
@@ -333,97 +456,97 @@ public:
             return;
         }
 
-        if (isGameOver) {
-            if (key == ' ') {
-                Reset();
-            }
-            return;
-        }
+		if (isGameOver) {
+			if (key == ' ') {
+				Reset();
+			}
+			return;
+		}
 
-        if (key == ' ' && !isJumping) {
-            isJumping = true;
-            velocityY = JUMP_FORCE;
-        }
-        
-        //if ((key == 'c' || key == 'C') && viviUnlocked) {
-           // currentCharacter = 1 - currentCharacter; // Toggle
-        //}
-    }
+		if (key == ' ' && !isJumping) {
+			isJumping = true;
+			velocityY = JUMP_FORCE;
+		}
+	}
+
+	int GetAccumulatedCoins() const { return accumulatedCoins; }
+	void AddAccumulatedCoins(int amount) { accumulatedCoins += amount; }
+	void SetPhase2CoinTarget(int target) { accumulatedCoins = target; } // Used for phase2CoinTarget reference
 
 private:
-    RunnerGame() : 
-        initialized(false), 
-        currentCharacter(0), 
-        viviUnlocked(false),
-        unlockMessageType(0),
-        GROUND_Y(173.0f),
-        GRAVITY(2000.0f),
-        JUMP_FORCE(900.0f),
-        // Initialize other primitive members
-        playerX(100.0f),
-        playerY(175.0f),
-        velocityY(0.0f),
-        isJumping(false),
-        moveSpeed(400.0f),
-        bgX1(0.0f),
-        bgX2(1000.0f),
-        score(0),
-        coins(0),
-        isGameOver(false),
-        currentFrame(0),
-        animTimer(0.0f),
-        spawnTimer(0.0f),
-        // Texture placeholders
-        lavaStoneTex(0),
-        monsterTex(0),
-        crystalTex(0)
-    {
-         bgLayers[0] = 0;
-         bgLayers[1] = 0;
-    }
-    
-    // Copy control
-    RunnerGame(const RunnerGame&);
-    void operator=(const RunnerGame&);
+	RunnerGame() :
+		initialized(false),
+		currentCharacter(0),
+		viviUnlocked(false),
+		unlockMessageType(0),
+		GRAVITY(2000.0f),
+		JUMP_FORCE(900.0f),
+		playerX(100.0f),
+		playerY(175.0f),
+		velocityY(0.0f),
+		isJumping(false),
+		moveSpeed(400.0f),
+		bgX1(0.0f),
+		bgX2(1000.0f),
+		score(0),
+		coins(0),
+		accumulatedCoins(0),
+		isGameOver(false),
+		currentFrame(0),
+		animTimer(0.0f),
+		nextPlatformX(2000.0f),
+		lavaStoneTex(0),
+		crystalTex(0)
+	{
+		bgLayers[0] = 0;
+		bgLayers[1] = 0;
+	}
 
-    bool initialized;
-    
-    // Resources
-    std::vector<unsigned int> kaelRunTextures;
-    std::vector<unsigned int> kaelJumpTextures;
-    std::vector<unsigned int> viviRunTextures;
-    unsigned int bgLayers[2];
-    unsigned int lavaStoneTex;
-    unsigned int monsterTex;
-    unsigned int crystalTex;
+	// Copy control
+	RunnerGame(const RunnerGame&);
+	void operator=(const RunnerGame&);
 
-    // Game Variables
-    const float GROUND_Y;
-    const float GRAVITY;
-    const float JUMP_FORCE;
-    
-    float playerX, playerY;
-    float velocityY;
-    bool isJumping;
-    
-    int currentCharacter; // 0=Kael, 1=Vivi
-    bool viviUnlocked;
-    int unlockMessageType; // 0=None, 1=Dawn, 2=Drake
-    
-    float moveSpeed;
-    float bgX1, bgX2;
-    
-    int score;
-    int coins;
-    bool isGameOver;
-    
-    // Animation
-    int currentFrame;
-    float animTimer;
-    
-    // Spawning
-    std::vector<RunnerEntity> entities;
-    float spawnTimer;
+	bool initialized;
+
+	// Resources
+	std::vector<unsigned int> kaelRunTextures;
+	std::vector<unsigned int> kaelJumpTextures;
+	std::vector<unsigned int> viviRunTextures;
+	std::vector<unsigned int> coinTextures;
+	unsigned int bgLayers[2];
+	unsigned int lavaStoneTex;
+	std::vector<unsigned int> monsterTextures;
+	unsigned int crystalTex; // Included for old references
+
+	// Game Variables
+	const float GRAVITY;
+	const float JUMP_FORCE;
+
+	float playerX, playerY;
+	float velocityY;
+	bool isJumping;
+
+	int currentCharacter; // 0=Kael, 1=Vivi
+	bool viviUnlocked;
+	int unlockMessageType; // OLD GAME FLAG
+
+	float moveSpeed;
+	float bgX1, bgX2;
+
+	int score;
+	int coins;
+	int accumulatedCoins;
+	bool isGameOver;
+
+	// Animation
+	int currentFrame;
+	float animTimer;
+
+	// World/Platforms
+	std::vector<Platform> platforms;
+	float nextPlatformX;
+
+	std::vector<RunnerEntity> entities;
 };
 
 #endif

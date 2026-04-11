@@ -37,7 +37,7 @@ void playClick(int mx, int my)
 {
 	// PLAY button area
 	if (mx >= 398 && mx <= 572 &&
-		my >= 160 && my <= 215)
+		my >= 210 && my <= 265)
 	{
 		gameState = 1;
 		playState = 1;// Go to playpage
@@ -45,7 +45,7 @@ void playClick(int mx, int my)
 }
 
 void creditClick(int mx, int my) {
-	if (mx >= 388 && mx <= 578 && my >= 80 && my <= 130) {
+	if (mx >= 388 && mx <= 578 && my >= 130 && my <= 180) {
 		gameState = 2;
 	}
 }

@@ -206,6 +206,7 @@ static void wildAreaClick(int mx, int my) {
     if (mx >= 20 && mx <= 100 && my >= 540 && my <= 580) {
         if (matchesFound == 6) {
             CombatManager& cm = CombatManager::GetInstance();
+            cm.phase2MemoryDone = true; // Mark dynamic task as complete
 
             // Endgame final quest: memory done
             if (cm.allTowersCleared && !cm.endgameMemoryDone) {
@@ -220,23 +221,30 @@ static void wildAreaClick(int mx, int my) {
                 return;
             }
 
-            // Normal: restore lives and restart tower with Vivi
-            cm.RestoreLives();
-            int tower = cm.lastTowerPlayed;
+            // Normal: restore lives and restart tower — ONLY if this visit was caused by losing all lives
+            if (cm.sentToWildAreaByLoss) {
+                cm.RestoreLives();
+                int tower = cm.lastTowerPlayed;
+                restartWildArea();
+                wildAreaMode = 0;
+                if (tower == 3) {
+                    cm.InitTower3();
+                    gameState = 9;
+                } else if (tower == 2) {
+                    AdvancedCombatManager::GetInstance().Init();
+                    gameState = 7;
+                } else if (tower == 1) {
+                    cm.InitCombat();
+                    gameState = 6;
+                } else if (tower == 4) {
+                    gameState = 1;
+                }
+                return;
+            }
+
+            // Voluntary visit (houses area): just go back to selection
             restartWildArea();
             wildAreaMode = 0;
-            if (tower == 3) {
-                cm.InitTower3();
-                gameState = 9;
-            } else if (tower == 2) {
-                AdvancedCombatManager::GetInstance().Init();
-                gameState = 7;
-            } else if (tower == 1) {
-                cm.InitCombat();
-                gameState = 6;
-            } else if (tower == 4) {
-                gameState = 1;
-            }
             return;
         }
 
