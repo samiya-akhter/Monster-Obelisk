@@ -19,7 +19,7 @@ static int matchesFound = 0;
 static int movesLeft = 10;
 const int MAX_MOVES = 12;
 
-static int wildAreaMode = 0; // 0 = Selection, 1 = Memory Game
+extern int wildAreaMode;
 
 static void shuffleCards() {
     // Reset game state
@@ -154,12 +154,7 @@ static void drawMemoryGame() {
 
 static void drawWildArea()
 {
-    // If RunnerGame signals we should jump straight to memory game
-    if (CombatManager::GetInstance().pendingMemoryGame) {
-        CombatManager::GetInstance().pendingMemoryGame = false;
-        shuffleCards();
-        wildAreaMode = 1;
-    }
+
 
     if (wildAreaMode == 0) {
         drawWildAreaSelection();
@@ -212,12 +207,16 @@ static void wildAreaClick(int mx, int my) {
         if (matchesFound == 6) {
             CombatManager& cm = CombatManager::GetInstance();
 
-            // Endgame final quest: both runner done + memory done
-            if (cm.allTowersCleared && cm.endgameRunnerDone && !cm.endgameMemoryDone && cm.lastTowerPlayed == 4) {
+            // Endgame final quest: memory done
+            if (cm.allTowersCleared && !cm.endgameMemoryDone) {
                 cm.endgameMemoryDone = true;
                 restartWildArea();
                 wildAreaMode = 0;
-                gameState = 10; // Return to main outer map!
+                if (cm.endgameRunnerDone) {
+                    gameState = 1; // Both done -> open outer map new!
+                } else {
+                    gameState = 5;  // Go back to selection
+                }
                 return;
             }
 
@@ -236,7 +235,7 @@ static void wildAreaClick(int mx, int my) {
                 cm.InitCombat();
                 gameState = 6;
             } else if (tower == 4) {
-                gameState = 10;
+                gameState = 1;
             }
             return;
         }

@@ -10,6 +10,7 @@
 #include "battletower1.h"
 #include "RunnerGame.h"
 #include "AdvancedCombatManager.h"
+#include "FinalBossManager.h"
 #include <ctime>
 #include "OpenWorld.h"
 
@@ -49,6 +50,7 @@ int playState = 0;
 int creditState = 0;
 int settingState = 0;
 int helpState = 0;
+int wildAreaMode = 0;
 
 /*
 gameState = 0 >> main menu
@@ -149,6 +151,11 @@ void iDraw()
 			gameState = 5;
 		}
 		OpenWorldGame::GetInstance().Render();
+	}
+	else if (gameState == 11)
+	{
+		FinalBossManager::GetInstance().Update(deltaTime);
+		FinalBossManager::GetInstance().Render();
 	}
 }
 
@@ -340,6 +347,56 @@ void fixedUpdate()
 		}
 	}
 
+	if (gameState == 11) {
+		// Player Movement (Faster for Sprint)
+		if (isKeyPressed('a') || isKeyPressed('A') || isSpecialKeyPressed(GLUT_KEY_LEFT)) {
+			FinalBossManager::GetInstance().MovePlayer(-10); // Move Left (Faster)
+		}
+		if (isKeyPressed('d') || isKeyPressed('D') || isSpecialKeyPressed(GLUT_KEY_RIGHT)) {
+			FinalBossManager::GetInstance().MovePlayer(10);  // Move Right (Faster)
+		}
+
+		// Basic Attack - W
+		static bool fb_wKeyReleased = true;
+		if (isKeyPressed('w') || isKeyPressed('W')) {
+			if (fb_wKeyReleased) {
+				FinalBossManager::GetInstance().PlayerAttack(1);
+				fb_wKeyReleased = false;
+			}
+		} else {
+			fb_wKeyReleased = true;
+		}
+
+		// Jump - SPACE
+		if (isKeyPressed(' ')) {
+			FinalBossManager::GetInstance().JumpPlayer();
+		}
+
+		// Thunder Crash - F
+		static bool fb_fKeyReleased = true;
+		if (isKeyPressed('f') || isKeyPressed('F')) {
+			if (fb_fKeyReleased) {
+				FinalBossManager::GetInstance().PlayerAttack(2);
+				fb_fKeyReleased = false;
+			}
+		} else {
+			fb_fKeyReleased = true;
+		}
+
+		// Global Restart/Exit for Boss Room via space/ESC handled by keyboard inputs natively or here
+        // (Wait, space is used for attack and restart. We need to distinguish it.)
+        // But let's just let iKeyboard or fixedUpdate do it:
+        FinalBossManager::GetInstance().HandleInput(isKeyPressed(' ') ? ' ' : (isKeyPressed(27) ? 27 : 0));
+        
+        static bool bossEsc = true;
+        if (isKeyPressed(27)) {
+            if (bossEsc) {
+               gameState = 10;
+               bossEsc = false;
+            }
+        } else { bossEsc = true; }
+	}
+
 
 
 	// Global movements
@@ -507,6 +564,7 @@ int main()
 	CombatManager::GetInstance().InitCombat();
     RunnerGame::GetInstance().Init();
 	AdvancedCombatManager::GetInstance().Init();
+	FinalBossManager::GetInstance().Init();
 	OpenWorldGame::GetInstance().Init();
 
 	iStart();

@@ -10,7 +10,7 @@ int helpHover = 0;
 void drawMenu()
 {
 	//iShowBMP(0, 0, "Image//homepage.bmp");
-	iShowImage(0, 0, 1000, 600, iLoadImage("Image//homepage.png"));
+	iShowImage(0, 0, 1000, 600, iLoadImage("Image//Main Menu image new.jpg"));
 	
 	// Play button image
 

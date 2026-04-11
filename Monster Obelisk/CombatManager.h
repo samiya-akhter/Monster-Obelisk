@@ -84,7 +84,6 @@ public:
 	bool allTowersCleared;
 	bool endgameRunnerDone;   // collected 10 crystals after all towers cleared
 	bool endgameMemoryDone;   // completed memory game after all towers cleared
-	bool pendingMemoryGame;   // signal to wildarea.h to jump straight to memory game
 
 	static CombatManager& GetInstance() {
 		static CombatManager instance;
@@ -793,7 +792,6 @@ private:
 		allTowersCleared(false),
 		endgameRunnerDone(false),
 		endgameMemoryDone(false),
-		pendingMemoryGame(false),
 		TOTAL_WAVES(3),
 		PLAYER_START_X(100),
 		PLAYER_START_Y(50),

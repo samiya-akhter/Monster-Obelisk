@@ -184,7 +184,6 @@ public:
                     }
                     // Endgame: all towers cleared, need 10 crystals
                     if (CombatManager::GetInstance().allTowersCleared
-                        && CombatManager::GetInstance().lastTowerPlayed == 4
                         && !CombatManager::GetInstance().endgameRunnerDone
                         && coins >= 10) {
                         CombatManager::GetInstance().endgameRunnerDone = true;
@@ -319,9 +318,14 @@ public:
                     gameState = 9; // Return to Tower 3 
                     CombatManager::GetInstance().InitTower3WithDrake();
                 } else if (unlockMessageType == 3) {
-                    // Endgame: signal wildarea.h to jump to memory game
-                    CombatManager::GetInstance().pendingMemoryGame = true;
-                    gameState = 5;
+                    // Endgame: runner done
+                    extern int wildAreaMode;
+                    if (CombatManager::GetInstance().endgameMemoryDone) {
+                        gameState = 1; // Both done, back to outer map new image!
+                    } else {
+                        wildAreaMode = 0; // Return to selection screen
+                        gameState = 5;
+                    }
                 }
                 unlockMessageType = 0;
                 Reset(); // Reset runner game for next time
