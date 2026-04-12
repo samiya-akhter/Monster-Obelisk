@@ -40,20 +40,20 @@ void drawPlayPage() {
         iSetColor(0, 0, 0);
         iFilledRectangle(skipX, skipY, skipW, skipH);
         iSetColor(255, 255, 255);
-        iText(skipX + 30, skipY + 15, "SKIP", (void *)0x0008);
+        iText(skipX + skipW / 2 - (4 * 9) / 2, skipY + skipH / 2 - 15 / 2, "SKIP", (void*)0x0002);
 
         // Instruction
-        iText(300, 565, "Press SPACE to Continue!", (void *)0x0008);
+        iText(300, 565, "Press SPACE to Continue!", (void *)0x0002);
     } else {
         iSetColor(255, 255, 0);
-        iText(340, 565, "Press SPACE to Continue!", (void *)0x0008);
+        iText(340, 565, "Press SPACE to Continue!", (void *)0x0002);
     }
   } else {
     CombatManager& cm = CombatManager::GetInstance();
     if (cm.allTowersCleared && cm.endgameRunnerDone && cm.endgameMemoryDone) {
         iShowImage(0, 0, 1000, 600, iLoadImage("Image//outer map new.png"));
         iSetColor(255, 215, 0);
-        iText(320, 30, "All Quests Complete! Click the Top Tower!", (void*)0x0005);
+        iText(320, 30, "All Quests Complete! Click the Top Tower!", (void*)0x0002);
     } else {
         iShowImage(0, 0, 1000, 600, iLoadImage(map[playFrame]));
     }
@@ -61,8 +61,7 @@ void drawPlayPage() {
     // Show "No Lives" warning if player cannot fight
     if (CombatManager::GetInstance().lives <= 0) {
       iSetColor(255, 0, 0);
-      iText(320, 580, "NO LIVES! Win Memory Game in Wild Area!",
-            (void *)0x0005);
+      iText(320, 580, "NO LIVES! Win Memory Game in Wild Area!", (void*)0x0002);
     }
   }
 }

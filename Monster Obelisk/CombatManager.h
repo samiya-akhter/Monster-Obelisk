@@ -85,6 +85,7 @@ public:
 	bool allTowersCleared;
 	bool endgameRunnerDone;   // collected 10 crystals after all towers cleared
 	bool endgameMemoryDone;   // completed memory game after all towers cleared
+	bool pendingMemoryGame;   // set to auto-route player into memory game from runner
 
 	// Task / Phase tracking
 	bool phase1RewardGiven;
@@ -838,6 +839,7 @@ private:
 		allTowersCleared(false),
 		endgameRunnerDone(false),
 		endgameMemoryDone(false),
+		pendingMemoryGame(false),
 		phase1RewardGiven(false),
 		phase2RewardGiven(false),
 		phase3RewardGiven(false),

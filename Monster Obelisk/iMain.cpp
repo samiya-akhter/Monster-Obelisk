@@ -16,6 +16,8 @@
 #include "OpenWorld.h"
 #include "EishiroConversation.h"
 #include "shoppage.h"
+#include "nameinputpage.h"
+#include "saveselectpage.h"
 #include "audio.h"
 void drawPlayPage();
 void drawCreditPage();
@@ -173,6 +175,14 @@ void iDraw()
 	{
 		drawShopMaster();
 	}
+	else if (gameState == 15)
+	{
+		drawNameInputPage();
+	}
+	else if (gameState == 16)
+	{
+		drawSaveSelectPage();
+	}
 
     else if (gameState == 6)
 	{
@@ -300,6 +310,12 @@ void iMouse(int button, int state, int mx, int my)
 		if (gameState == 0)
 			howToPlayClick(mx, my);
 
+		if (gameState == 4)
+			howToPlayPageClick(mx, my);
+
+		if (gameState == 16)
+			saveSelectClick(mx, my);
+
 		if (gameState == 3)
 			settingPageClick(mx, my);
 
@@ -372,6 +388,10 @@ void iSpecialKeyboard(unsigned char key){
 
 void fixedUpdate()
 {
+    if (gameState == 15) {
+        nameInputKeyboardUpdate();
+    }
+
     // Runner Mode Cheat
     if (isKeyPressed('r') || isKeyPressed('R')) {
         gameState = 8;
@@ -629,6 +649,11 @@ void fixedUpdate()
 
                     gameState = 10; // Return to open world map
                     OpenWorldGame::GetInstance().SetTriggerCooldown(1.5);
+                }
+            } else if (gameState == 11) {
+                if (FinalBossManager::GetInstance().IsVictory()) {
+                    SaveManager::SaveGame(SaveManager::currentPlayerName);
+                    gameState = 0; // Return to main menu
                 }
             } else if (gameState == 10) {
                 gameState = 0;  // Return to main menu

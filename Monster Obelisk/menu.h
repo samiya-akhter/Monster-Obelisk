@@ -1,6 +1,8 @@
 #ifndef MENU_H
 #define MENU_H
 
+#include "SaveManager.h"
+
 extern int gameState,playState;
 int playHover = 0;
 int creditHover = 0;
@@ -10,7 +12,7 @@ int helpHover = 0;
 void drawMenu()
 {
 	//iShowBMP(0, 0, "Image//homepage.bmp");
-	iShowImage(0, 0, 1000, 600, iLoadImage("Image//Main Menu image new.jpg"));
+	iShowImage(0, 0, 1000, 600, iLoadImage("Image//homepage.png"));
 	
 	// Play button image
 
@@ -39,8 +41,11 @@ void playClick(int mx, int my)
 	if (mx >= 398 && mx <= 572 &&
 		my >= 210 && my <= 265)
 	{
-		gameState = 1;
-		playState = 1;// Go to playpage
+		if (SaveManager::HasSaveFile()) {
+			gameState = 16; // Save Select Screen
+		} else {
+			gameState = 15; // Name Input Screen
+		}
 	}
 }
 

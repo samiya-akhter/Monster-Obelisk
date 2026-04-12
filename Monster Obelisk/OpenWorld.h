@@ -65,13 +65,13 @@ public:
 
         printf("[OpenWorld] Initializing tile system...\n");
 
-        // Load task icon ignoring black background (0,0,0)
-        taskIcon = iLoadImage("Image/task.png", 0, 0, 0);
+        // Load task icon utilizing native PNG transparency
+        taskIcon = iLoadImage("Image/task.png");
         // Phase task images (transparent PNG boards)
-        taskPhaseImages[0] = iLoadImage("Image/task_phase1.png", 0, 0, 0); // Phase 1: Tower1, 10 coins, Dawn
-        taskPhaseImages[1] = iLoadImage("Image/task_phase2.png", 0, 0, 0); // Phase 2: Tower2, 20 coins, Memory
-        taskPhaseImages[2] = iLoadImage("Image/task_phase3.png", 0, 0, 0); // Phase 3: Tower3, Drake
-        taskPhaseImages[3] = iLoadImage("Image/task_phase4.png", 0, 0, 0); // Phase 4: Final Quest
+        taskPhaseImages[0] = iLoadImage("Image/task_phase1.png"); // Phase 1: Tower1, 10 coins, Dawn
+        taskPhaseImages[1] = iLoadImage("Image/task_phase2.png"); // Phase 2: Tower2, 20 coins, Memory
+        taskPhaseImages[2] = iLoadImage("Image/task_phase3.png"); // Phase 3: Tower3, Drake
+        taskPhaseImages[3] = iLoadImage("Image/task_phase4.png"); // Phase 4: Final Quest
         showTask1 = false;
 
         char path[256];
@@ -320,6 +320,8 @@ public:
             else                             phaseIdx = 3;
 
             if (taskPhaseImages[phaseIdx]) {
+                iSetColor(0, 0, 0); // Solid black background for task images
+                iFilledRectangle(100, 90, 800, 420);
                 iShowImage(100, 90, 800, 420, taskPhaseImages[phaseIdx]);
             }
 

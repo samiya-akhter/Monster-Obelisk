@@ -14,8 +14,8 @@ static unsigned int tower2SelectionImg = 0;
 static unsigned int shopState1Img = 0;
 
 static void LoadShopUI() {
-    if (tower2SelectionImg == 0) tower2SelectionImg = iLoadImage("Image//tower2_selection.png", 0,0,0);
-    if (shopState1Img == 0) shopState1Img = iLoadImage("Image//shop_state1.png", 0,0,0);
+    if (tower2SelectionImg == 0) tower2SelectionImg = iLoadImage("Image//tower2_selection.png");
+    if (shopState1Img == 0) shopState1Img = iLoadImage("Image//shop_state1.png");
 }
 
 static void drawShopMaster() {
@@ -23,6 +23,10 @@ static void drawShopMaster() {
     CombatManager& cm = CombatManager::GetInstance();
     RunnerGame& rg = RunnerGame::GetInstance();
 
+    // Solid background for the selections and shop pages
+    iSetColor(0, 0, 0);
+    iFilledRectangle(0, 0, 1000, 600);
+    
     iSetColor(255, 255, 255);
 
     if (shopMenuState == 0) {
@@ -33,7 +37,7 @@ static void drawShopMaster() {
         iSetColor(200, 0, 0);
         iFilledRectangle(20, 540, 80, 40);
         iSetColor(255, 255, 255);
-        iText(30, 550, "BACK", (void*)0x0005);
+        iText(20 + 80 / 2 - (4 * 9) / 2, 540 + 40 / 2 - 15 / 2, "BACK", (void*)0x0002);
     } 
     else if (shopMenuState == 1) {
         // Shop Page
@@ -42,16 +46,16 @@ static void drawShopMaster() {
         iSetColor(255, 215, 0);
         char coinStr[50];
         sprintf_s(coinStr, sizeof(coinStr), "Wallet: %d Coins", rg.GetAccumulatedCoins());
-        iText(800, 550, coinStr, (void*)0x0005);
+        iText(800, 550, coinStr, (void*)0x0002);
 
         // Draw Heal Potion if Tower 1 is cleared
         if (cm.tower1Cleared) {
             // We use iText overlay in case generation was flawed or missing details
             iSetColor(255, 255, 255);
-            iText(220, 220, "BUY: 50 Coins", (void*)0x0008);
+            iText(220, 220, "BUY: 50 Coins", (void*)0x0002);
             char inv1[50];
             sprintf_s(inv1, sizeof(inv1), "Owned: %d", cm.healPotionCount);
-            iText(220, 170, inv1, (void*)0x0006);
+            iText(220, 170, inv1, (void*)0x0002);
         }
 
         // Draw Damage Potion if Tower 1 AND Tower 3 are cleared
@@ -59,19 +63,19 @@ static void drawShopMaster() {
             iSetColor(150, 50, 255);
             iFilledRectangle(500, 200, 200, 250); // overlay a purple rect for damage potion
             iSetColor(255, 255, 255);
-            iText(520, 420, "DAMAGE POTION", (void*)0x0005);
-            iText(520, 220, "BUY: 50 Coins", (void*)0x0008);
+            iText(500 + 200 / 2 - (13 * 9) / 2, 420, "DAMAGE POTION", (void*)0x0002); // 13 chars
+            iText(500 + 200 / 2 - (13 * 9) / 2, 220, "BUY: 50 Coins", (void*)0x0002);
 
             char inv2[50];
             sprintf_s(inv2, sizeof(inv2), "Owned: %d", cm.damagePotionCount);
-            iText(520, 170, inv2, (void*)0x0006);
+            iText(500 + 200 / 2 - (13 * 9) / 2, 170, inv2, (void*)0x0002);
         }
 
         // BACK BUTTON
         iSetColor(200, 0, 0);
         iFilledRectangle(20, 540, 80, 40);
         iSetColor(255, 255, 255);
-        iText(30, 550, "BACK", (void*)0x0005);
+        iText(20 + 80 / 2 - (4 * 9) / 2, 540 + 40 / 2 - 15 / 2, "BACK", (void*)0x0002);
     }
 }
 

@@ -62,6 +62,9 @@ public:
 		// Crystals / Coins
 		LoadAnimationFrames(coinTextures, "Image//coin//coin", 4);
 
+		winImageTex = iLoadImage("Image//winUpdaterRunner.jpeg");
+		loseImageTex = iLoadImage("Image//loseUpdateRunner.png");
+
 		Reset();
 		initialized = true;
 	}
@@ -420,12 +423,7 @@ public:
         }
 
 		if (isGameOver) {
-			iSetColor(0, 0, 0);
-			iFilledRectangle(300, 250, 400, 100);
-			iSetColor(255, 0, 0);
-			iText(420, 300, "GAME OVER", (void*)0x0006);
-			iSetColor(255, 255, 255);
-			iText(380, 270, "Press SPACE to Restart", (void*)0x0008);
+			iShowImage(0, 0, 1000, 600, loseImageTex);
 		}
 	}
 
@@ -470,6 +468,7 @@ public:
 	}
 
 	int GetAccumulatedCoins() const { return accumulatedCoins; }
+	void SetAccumulatedCoins(int amount) { accumulatedCoins = amount; }
 	void AddAccumulatedCoins(int amount) { accumulatedCoins += amount; }
 	void SetPhase2CoinTarget(int target) { accumulatedCoins = target; } // Used for phase2CoinTarget reference
 
@@ -496,7 +495,9 @@ private:
 		animTimer(0.0f),
 		nextPlatformX(2000.0f),
 		lavaStoneTex(0),
-		crystalTex(0)
+		crystalTex(0),
+		winImageTex(0),
+		loseImageTex(0)
 	{
 		bgLayers[0] = 0;
 		bgLayers[1] = 0;
@@ -517,6 +518,8 @@ private:
 	unsigned int lavaStoneTex;
 	std::vector<unsigned int> monsterTextures;
 	unsigned int crystalTex; // Included for old references
+	unsigned int winImageTex;
+	unsigned int loseImageTex;
 
 	// Game Variables
 	const float GRAVITY;
