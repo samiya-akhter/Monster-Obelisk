@@ -16,7 +16,7 @@
 #include "OpenWorld.h"
 #include "EishiroConversation.h"
 #include "shoppage.h"
-
+#include "audio.h"
 void drawPlayPage();
 void drawCreditPage();
 void drawSettingPage();
@@ -49,6 +49,7 @@ char homepage[25] = {"Image//homepage.png"};
 char button[2][20] = { "Image//play.bmp", "Image//credit.bmp" };
 //char playpage[20] = { "Image//playpage.bmp" };
 int gameState = 0;
+int previousGameState = 0;
 int playState = 0;
 int creditState = 0;
 int settingState = 0;
@@ -89,6 +90,47 @@ void iDraw()
         CombatManager::GetInstance().UpdateCombat(deltaTime);
     }
 
+	// BGM Dispatch
+	if (gameState == 0 || (gameState == 1 && playState == 1) || gameState == 1 || gameState == 12 || gameState == 13) {
+		AudioSystem::PlayBGM(BGM_MAIN);
+	}
+	else if (gameState == 10) {
+		if (OpenWorldGame::GetInstance().IsTaskShowing()) {
+			AudioSystem::PlayBGM(BGM_SHOP);
+		} else {
+			AudioSystem::PlayBGM(BGM_MAIN);
+		}
+	}
+	else if (gameState == 5 || gameState == 14) {
+		AudioSystem::PlayBGM(BGM_SHOP);
+	}
+	else if (gameState == 8) {
+		AudioSystem::PlayBGM(BGM_EXTRA);
+	}
+	else if (gameState == 6 || gameState == 7 || gameState == 9) {
+		bool isDefeat = false;
+		bool isVictory = false;
+		if (gameState == 6 || gameState == 9) {
+			isDefeat = CombatManager::GetInstance().IsDefeat();
+			isVictory = CombatManager::GetInstance().IsVictory();
+		} else if (gameState == 7) {
+			isDefeat = false; // Advanced combat doesn't use a defeat state
+			isVictory = AdvancedCombatManager::GetInstance().IsVictory();
+		}
+
+		if (isDefeat) AudioSystem::PlayBGM(BGM_LOSE);
+		else if (isVictory) AudioSystem::PlayBGM(BGM_WIN);
+		else AudioSystem::PlayBGM(BGM_BATTLE);
+	}
+	else if (gameState == 11) {
+		bool isDefeat = FinalBossManager::GetInstance().IsDefeat();
+		bool isVictory = FinalBossManager::GetInstance().IsVictory();
+
+		if (isDefeat) AudioSystem::PlayBGM(BGM_LOSE);
+		else if (isVictory) AudioSystem::PlayBGM(BGM_WIN);
+		else AudioSystem::PlayBGM(BGM_BATTLE);
+	}
+
 	if (gameState == 0)
 	{
 		drawMenu();
@@ -101,6 +143,10 @@ void iDraw()
 //	else if (gameState == 1)
 	{
 		drawPlayPage();
+		// Settings gear overlay on spawn map (only when not in story)
+		if (playState != 1) {
+			iShowImage(918, 518, 42, 42, iLoadImage("Image//setting.bmp", 0, 0, 0));
+		}
 	}
 
 	else if (gameState == 2)
@@ -155,6 +201,8 @@ void iDraw()
 	{
 		OpenWorldGame::GetInstance().Update(deltaTime);
 		OpenWorldGame::GetInstance().Render();
+		// Settings gear overlay (top-right corner)
+		iShowImage(918, 518, 42, 42, iLoadImage("Image//setting.bmp", 0, 0, 0));
 	}
 	else if (gameState == 11)
 	{
@@ -253,11 +301,16 @@ void iMouse(int button, int state, int mx, int my)
 			howToPlayClick(mx, my);
 
 		if (gameState == 3)
-			settingBackClick(mx, my);
+			settingPageClick(mx, my);
 
 		//inside map/playpage
 		if (gameState == 1) {
 			mapClick(mx, my); // Handle clicks on the map
+			// Settings gear on spawn map (top-right)
+			if (mx >= 918 && mx <= 960 && my >= 518 && my <= 560) {
+				previousGameState = gameState;
+				gameState = 3;
+			}
 		}
 		
 		//inside wildarea1(memorygame)
@@ -266,10 +319,15 @@ void iMouse(int button, int state, int mx, int my)
 			wildAreaClick(mx, my);
 		}
 
-		// Open World task map click
+		// Open World task map click + settings gear
 		if (gameState == 10)
 		{
 			OpenWorldGame::GetInstance().HandleMouseClick(mx, my);
+			// Settings gear on open world (top-right)
+			if (mx >= 918 && mx <= 960 && my >= 518 && my <= 560) {
+				previousGameState = gameState;
+				gameState = 3;
+			}
 		}
 
         // Story Mode Interaction
@@ -637,15 +695,7 @@ void openWorldAnimTimer() {
 int main()
 {
 	// Opening/Loading the audio files
-	//mciSendString("open \"Audios//background.mp3\" alias bgsong", NULL, 0, NULL);
-	//mciSendString("open \"Audios//gameover.mp3\" alias ggsong", NULL, 0, NULL);
-
-	// Playing the background audio on repeat
-	//mciSendString("play bgsong repeat", NULL, 0, NULL);
-
-	// If the use of an audio is finished, close it to free memory
-   // mciSendString("open \"Audios//main.mp3\" alias mainMusic", NULL, 0, NULL);
-    //mciSendString("play mainMusic repeat", NULL, 0, NULL);
+	AudioSystem::Init();
 
 	iSetTimer(30, updateStory);
 	iSetTimer(800, updatePlayPage);

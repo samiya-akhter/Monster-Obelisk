@@ -6,7 +6,7 @@
 #include <string>
 #include <cstdio>
 #include "CombatManager.h"
-
+#include "audio.h"
 // Forward declarations
 extern void iShowImage(int x, int y, int width, int height, unsigned int texture);
 extern void iSetColor(double r, double g, double b);
@@ -299,9 +299,11 @@ public:
 				if (activeEnemies[i].attacksPerformed % 4 == 0) {
 					damageToDeal *= 2.5f;
 					activeEnemies[i].currentAttackType = 2;
+					AudioSystem::PlaySFX(activeEnemies[i].name, 2);
 				} else {
 					damageToDeal *= 0.6f;
 					activeEnemies[i].currentAttackType = 1;
+					AudioSystem::PlaySFX(activeEnemies[i].name, 1);
 				}
 
 				activeEnemies[i].frame = 0;
@@ -364,6 +366,12 @@ public:
 		if (CombatManager::GetInstance().damagePotionUsed) {
 			currentAttackDamage *= 1.5f;
 		}
+
+		std::string currentPlayerName = "Vivi";
+		if (CombatManager::GetInstance().dawnUnlocked) currentPlayerName = "Dawn";
+		// AdvancedCombatManager doesn't seem to load Drake, but if it did it would be here
+		
+		AudioSystem::PlaySFX(currentPlayerName, type);
 
 		currentState        = ADV_PLAYER_ATTACK;
 		stateTimer          = 0;

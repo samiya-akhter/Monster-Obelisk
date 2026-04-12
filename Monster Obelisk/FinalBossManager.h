@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include "audio.h"
 
 // Forward declarations bridging to iGraphics
 extern void iShowImage(int x, int y, int width, int height, unsigned int texture);
@@ -111,6 +112,14 @@ public:
     static FinalBossManager& GetInstance() {
         static FinalBossManager instance;
         return instance;
+    }
+
+    bool IsVictory() const {
+        return currentState == FB_VICTORY;
+    }
+
+    bool IsDefeat() const {
+        return currentState == FB_DEFEAT;
     }
 
     void HealPlayer(float percentage) {
@@ -225,6 +234,7 @@ public:
         playerAttackType = type; // 1 = LB, 2 = TC
         playerAttackTimer = 0.5f; // half second cast
         playerAttackFrame = 0;
+        AudioSystem::PlaySFX(currentMonsterName, type);
 
         // Apply Damage if in range
         float dist = fabs(playerX - bossX);
@@ -308,9 +318,11 @@ public:
                 if (useGroundSmashNext) {
                     groundSmashTimer = 1.2f;
                     bossAttackType = 3; // ground smash
+                    AudioSystem::PlaySFX("Mogambo", 3);
                 } else {
                     specialAttackTimer = 2.5f;
                     bossAttackType = 2; // normal special
+                    AudioSystem::PlaySFX("Mogambo", 2);
                 }
                 useGroundSmashNext = !useGroundSmashNext; // toggle next
                 bossFrame = 0;
@@ -370,6 +382,7 @@ public:
                 if (normalAttackTimer <= 0) {
                     playerHP -= 20.0f;
                     normalAttackTimer = 1.0f;
+                    AudioSystem::PlaySFX("Mogambo", 1);
                     if (playerHP <= 0) {
                         playerHP = 0;
                         currentState = FB_DEFEAT;

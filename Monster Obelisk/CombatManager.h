@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <algorithm>
 #include <cmath>
+#include "audio.h"
 
 // Forward declarations if not already included
 // This ensures Intellisense works, and the compiler is happy even if include order changes slightly (though iGraphics must come first for the libs)
@@ -114,6 +115,10 @@ public:
 
 	bool IsVictory() const {
 		return currentState == VICTORY;
+	}
+
+	bool IsDefeat() const {
+		return currentState == DEFEAT;
 	}
 
 	void InitCombat() {
@@ -409,6 +414,8 @@ public:
                 currentAttackDamage *= 1.5f;
             }
 
+            AudioSystem::PlaySFX(playerMonster.name, type);
+
 			currentState = PLAYER_ATTACK;
 			stateTimer = 0;
 			attackFeedbackTimer = 1.0f; // Show text for 1 second
@@ -542,9 +549,11 @@ public:
 					if (activeEnemies[i].attacksPerformed % 4 == 0) {
 						damageToDeal *= 2.5f; // "significantly more damage"
 						activeEnemies[i].currentAttackType = 2; 
+						AudioSystem::PlaySFX(activeEnemies[i].name, 2);
 					} else {
 						damageToDeal *= 0.6f; // "significantly weaker"
 						activeEnemies[i].currentAttackType = 1;
+						AudioSystem::PlaySFX(activeEnemies[i].name, 1);
 					}
 					
 					activeEnemies[i].currentFrame = 0; // Reset anim

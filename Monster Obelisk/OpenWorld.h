@@ -129,6 +129,10 @@ public:
         triggerCooldown = seconds;
     }
 
+    bool IsTaskShowing() const {
+        return showTask1;
+    }
+
     void UpdateAnimation() {
         if (isMoving) {
             animFrame = (animFrame + 1) % OW_NUM_FRAMES;
